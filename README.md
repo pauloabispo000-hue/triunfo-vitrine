@@ -32,3 +32,32 @@ O protótipo usa `localStorage`, não tem autenticação segura, não valida CPF
 10. Publicar somente após testes ponta a ponta, política de privacidade, termos e adequação à LGPD.
 
 GitHub Pages pode hospedar somente a demonstração estática, não um sistema de vendas real.
+
+## Backend de autenticação (novo)
+
+A autenticação usa Node.js/Express, PostgreSQL, bcrypt e sessões persistidas no banco. O navegador nunca escolhe o papel do usuário: o servidor consulta `users.role` em cada requisição protegida. O cadastro público sempre cria contas `customer`.
+
+### Configuração de implantação
+
+1. Disponibilize Node.js 20+ e PostgreSQL gerenciado.
+2. Execute `database/schema.sql` no banco.
+3. Configure as variáveis de ambiente a partir de `.env.example`. Gere segredos longos e aleatórios para `SESSION_SECRET` e `ADMIN_BOOTSTRAP_TOKEN`; não os coloque no GitHub.
+4. Configure `DATABASE_URL`, `APP_ORIGIN` com a origem HTTPS do app e `NODE_ENV=production`.
+5. Execute `npm install` e `npm start`.
+6. Publique o frontend e a API na mesma origem HTTPS (ou configure CORS para a origem exata). A sessão usa cookie HttpOnly/Secure em produção.
+7. Crie a conta do proprietário pelo formulário de cadastro. Promova somente esse e-mail a administrador usando o token secreto do servidor:
+`curl -X POST https://SEU-DOMINIO/api/internal/bootstrap-admin -H "Content-Type: application/json" -H "x-bootstrap-token: SEU_TOKEN" -d '{"email":"SEU_EMAIL"}'`
+8. Apague/rotacione o token de bootstrap após promover o administrador.
+
+### Rotas
+
+- `POST /api/auth/register` — cria conta comum; senha mínima de 10 caracteres e hash bcrypt.
+- `POST /api/auth/login` — autentica e cria sessão HttpOnly.
+- `GET /api/auth/me` — retorna usuário autenticado e papel confirmado no banco.
+- `POST /api/auth/logout` — encerra sessão.
+- `GET /api/admin/session-check` — exemplo de rota exclusiva para administrador.
+- `POST /api/internal/bootstrap-admin` — promoção inicial protegida por segredo de ambiente.
+
+### Limites atuais
+
+Esta entrega protege cadastro, login, sessão e verificação de papel. Ainda não migra produtos, votos, carrinho, sugestões, pedidos, comprovantes ou configurações Pix para PostgreSQL; esses fluxos permanecem demonstrativos no navegador e não devem ser usados com dados reais. Recuperação de senha e verificação de e-mail também precisam de provedor de e-mail e fluxo de tokens antes do lançamento público. Configure HTTPS, backups, monitoramento e política de privacidade antes de produção.
