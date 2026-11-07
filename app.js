@@ -48,3 +48,17 @@ function review(sid,yes){let s=db.suggestions.find(x=>x.id===sid);s.status=yes?'
 function settingsSave(e){e.preventDefault();let f=new FormData(e.target);db.settings={store:f.get('store'),pix:f.get('pix'),minVotes:Number(f.get('minVotes'))};save();render()}
 function restoreSession(){try{user=JSON.parse(sessionStorage.getItem('triunfo-demo-user'))||null}catch{user=null}render()}
 restoreSession();
+const headerSizeObserver=new ResizeObserver(entries=>{
+  const header=entries[0]?.target;
+  if(header)document.documentElement.style.setProperty('--header-height',header.getBoundingClientRect().height+'px');
+});
+function trackHeaderHeight(){
+  headerSizeObserver.disconnect();
+  const header=document.querySelector('#app>header');
+  if(header){
+    document.documentElement.style.setProperty('--header-height',header.getBoundingClientRect().height+'px');
+    headerSizeObserver.observe(header);
+  }
+}
+new MutationObserver(trackHeaderHeight).observe(document.querySelector('#app'),{childList:true});
+trackHeaderHeight();
