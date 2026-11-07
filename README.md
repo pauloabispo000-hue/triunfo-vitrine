@@ -12,7 +12,7 @@ Abra `index.html` em um navegador ou sirva a pasta com `python -m http.server 80
 - Cadastro e login fictícios, tela de recuperação por e-mail (captura de endereço apenas), histórico de pedidos.
 - Sugestões com foto, moderação pelo administrador, votação única por usuário demonstrativo, aprovação por pelo menos 50% dos votos após mínimo configurável, análise de viabilidade, produção e publicação.
 - Área administrativa para produtos, sugestões, etapas, comprovantes e configuração Pix.
-- Login apenas para demonstração: CPF `00000000000`, senha `admin123`.
+- Login apenas para demonstração: e-mail `admin@triunfo.local`, senha `admin123`. Usuários comuns criam conta com e-mail e senha.
 
 ## AVISO: NÃO PUBLICAR PARA CLIENTES COMO ESTÁ
 
