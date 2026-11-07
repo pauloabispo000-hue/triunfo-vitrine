@@ -46,4 +46,5 @@ async function newProduct(e){e.preventDefault();let f=new FormData(e.target),ima
 function statusSet(pid,s){db.products.find(p=>p.id===pid).status=s;save();render()}
 function review(sid,yes){let s=db.suggestions.find(x=>x.id===sid);s.status=yes?'accepted':'rejected';if(yes)db.products.push({id:id(),name:s.name,price:0,status:'voting',image:s.image,yes:0,no:0});save();render()}
 function settingsSave(e){e.preventDefault();let f=new FormData(e.target);db.settings={store:f.get('store'),pix:f.get('pix'),minVotes:Number(f.get('minVotes'))};save();render()}
-render();
+async function restoreSession(){try{const r=await fetch('/api/auth/me',{credentials:'include'});if(r.ok){const d=await r.json();user=d.user}}catch(e){console.error('Auth API indisponível',e)}render()}
+restoreSession();
