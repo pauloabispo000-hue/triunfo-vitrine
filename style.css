@@ -2,3 +2,10 @@
 .brand-art{text-align:center;margin:0 0 24px}.brand-art img{display:block;width:100%;max-width:420px;max-height:380px;object-fit:contain;margin:0 auto;border-radius:14px}.brand img{object-fit:contain;border-radius:6px}
 
 .opening-art{margin:0 0 24px}.opening-art img{display:block;width:100%;height:auto;border-radius:16px}
+
+/* Artwork is 20% transparent; storefront controls remain fully opaque. */
+body{min-height:100vh;isolation:isolate;background:#f7f3eb}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:url("assets/abertura-triunfo.jpg") center center/cover no-repeat;opacity:.8}
+.sectionhead h2{background:rgba(247,243,235,.94);padding:10px 16px;border-radius:10px}
+main>h2{background:rgba(247,243,235,.94);padding:12px 16px;border-radius:10px}
+.product,.panel{background:#fff}
