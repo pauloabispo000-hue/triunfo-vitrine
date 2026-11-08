@@ -52,3 +52,10 @@ body::before{top:var(--header-height,112px);bottom:0;background-position:center 
     background:url("assets/abertura-triunfo.jpg?v=desktop-extended-edges-20261108-11") center top/auto 100% no-repeat;
   }
 }
+
+
+/* Corrige a ordem das camadas: fundo não pode encobrir a interface. */
+#app{position:relative;z-index:1;min-height:100vh}
+header,.bottom,.modalback{z-index:10}
+body::before,body::after{pointer-events:none!important}
+@media(min-width:651px){body::before{z-index:0!important}body::after{z-index:0!important}}
