@@ -20,3 +20,7 @@ body::before{top:var(--header-height,112px);bottom:0;background-position:center 
 #opening-screen.opening-screen-hidden{opacity:0;visibility:hidden;pointer-events:none}
 @media(max-width:650px){#opening-screen{--opening-image:url("assets/abertura-desktop-v3.jpg?v=triunfo-opening-orientation-6")}}
 @media(prefers-reduced-motion:reduce){#opening-screen{transition:none}}
+
+/* Uma única camada para a abertura, sem repetição de fundo. */
+#opening-screen::before{content:none!important;display:none!important}
+#opening-screen img{object-fit:cover!important}
