@@ -1,6 +1,6 @@
 /* Triunfo Vitrine — demonstração local. Não usar com dados reais. */
 const $=s=>document.querySelector(s), money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), id=()=>crypto.randomUUID();
-const initial={products:[{id:'p1',name:'Mousse de maracujá natural',price:12,status:'available',emoji:'🍮'},{id:'p2',name:'Mousse de chocolate',price:12,status:'voting',yes:8,no:2},{id:'p3',name:'Pudim de leite',price:14,status:'voting',yes:3,no:2}],users:[],suggestions:[],votes:{},cart:[],orders:[],settings:{pix:'',minVotes:10,store:'Triunfo Sobremesas'}};
+const initial={products:[{id:'p1',name:'Mousse de maracujá natural',price:12,status:'available',emoji:'🍮'},{id:'p2',name:'Mousse de chocolate',price:12,status:'voting',yes:0,no:0},{id:'p3',name:'Pudim de leite',price:14,status:'voting',yes:0,no:0}],users:[],suggestions:[],votes:{},cart:[],orders:[],settings:{pix:'',minVotes:10,store:'Triunfo Sobremesas'}};
 let db;try{db=JSON.parse(localStorage.getItem('triunfo-demo'))||structuredClone(initial)}catch{db=structuredClone(initial)}
 let user=null,page='home',adminTab='products',search='';
 const save=()=>localStorage.setItem('triunfo-demo',JSON.stringify(db)), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])), admin=()=>user?.role==='admin';
@@ -79,6 +79,25 @@ function initializeLocalAdmin(){
   db.settings.adminAccessVersion=version;
   save();
 }
+
+// Apply the requested voting reset once per local database.
+function resetRequestedVotingRound(){
+  const version='voting-reset-20261108-1';
+  db.settings=db.settings||{};
+  if(db.settings.votingResetVersion===version)return;
+  const votingIds=new Set(db.products.filter(p=>p.status==='voting').map(p=>p.id));
+  for(const product of db.products){
+    if(votingIds.has(product.id)){product.yes=0;product.no=0}
+  }
+  db.votes=db.votes||{};
+  for(const key of Object.keys(db.votes)){
+    const productId=key.slice(key.lastIndexOf(':')+1);
+    if(votingIds.has(productId))delete db.votes[key];
+  }
+  db.settings.votingResetVersion=version;
+  save();
+}
+resetRequestedVotingRound();
 initializeLocalAdmin();
 restoreSession();
 const headerSizeObserver=new ResizeObserver(entries=>{
