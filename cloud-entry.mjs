@@ -1,9 +1,12 @@
 import { createTriunfoAPI } from './supabase-api.mjs';
-import { attachValidationTools } from './validation-tools.mjs';
 import { recognizeReceipt } from './receipt-ocr.mjs?v=2';
 
 export async function startCloud(client) {
- const api=createTriunfoAPI(client);
+ const validationPage=location.pathname.endsWith('/validacao.html');
+ const api=createTriunfoAPI(client,validationPage?{
+  redirectTo:'https://pauloabispo000-hue.github.io/triunfo-vitrine/validacao.html'
+ }:undefined);
+ let recoveryUserId=null;
  let syncGeneration=0,refreshTimer,subscription,checkoutRequest=null;
  let refreshFlight=null,refreshRequested=false;
  const message=error=>error?.message||'Não foi possível concluir. Tente novamente.';
@@ -24,7 +27,6 @@ export async function startCloud(client) {
   db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.user_id})),
    cart:cart.map(i=>({id:i.product_id,qty:i.qty})),orders,users:[],votes:{}};
   render();
-  attachValidationTools(client,user?.role==='admin');
  }
  function refresh(){
   refreshRequested=true;
@@ -44,8 +46,40 @@ export async function startCloud(client) {
    <label class="field">E-mail<input name="email" type="email" required autocomplete="email"></label>
    <label class="field">Senha<input name="password" type="password" minlength="8" required autocomplete="${register?'new-password':'current-password'}"></label>
    <button class="btn">${register?'Cadastrar':'Entrar'}</button></form>
-   ${register?'':'<button class="btn secondary" onclick="auth(\'register\')">Cadastrar</button>'}`);
+   ${register?'':'<button class="btn secondary" onclick="auth(\'register\')">Cadastrar</button> <button class="btn secondary" onclick="requestCloudRecovery()">Esqueci a senha</button>'}`);
  };
+ window.requestCloudRecovery=()=>{
+  closeModal();modal(`<h2>Recuperar senha</h2><form onsubmit="sendCloudRecovery(event)">
+   <label class="field">E-mail<input name="email" type="email" required autocomplete="email"></label>
+   <button class="btn">Enviar link</button></form>`);
+ };
+ window.sendCloudRecovery=attempt(async(e)=>{
+  e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;
+  try{
+   await api.requestPasswordReset(String(new FormData(e.target).get('email')).trim());
+   closeModal();modal('<h2>Confira seu e-mail</h2><p>Se a conta estiver apta, você receberá um link para redefinir a senha.</p>');
+  }finally{if(button.isConnected)button.disabled=false}
+ });
+ function showPasswordReset(){
+  closeModal();modal(`<h2>Definir nova senha</h2><form onsubmit="finishCloudRecovery(event)">
+   <label class="field">Nova senha<input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+   <label class="field">Confirmar nova senha<input name="confirm" type="password" minlength="8" required autocomplete="new-password"></label>
+   <button class="btn">Salvar nova senha</button></form>`);
+ }
+ window.finishCloudRecovery=attempt(async(e)=>{
+  e.preventDefault();const f=new FormData(e.target),password=String(f.get('password')||'');
+  if(password.length<8||password!==f.get('confirm'))throw Error('Informe duas senhas iguais com pelo menos 8 caracteres.');
+  const expectedId=recoveryUserId;
+  if(!expectedId)throw Error('Abra um link de recuperação válido para continuar.');
+  const button=e.target.querySelector('button');button.disabled=true;
+  try{
+   const {data,error}=await client.auth.getUser();
+   if(error||data?.user?.id!==expectedId||recoveryUserId!==expectedId)throw Error('Abra um novo link de recuperação.');
+   await api.changePassword(password);
+   recoveryUserId=null;closeModal();await logout();
+   modal('<h2>Senha atualizada</h2><p>Entre novamente com a nova senha.</p>');
+  }finally{if(button.isConnected)button.disabled=false}
+ });
  authSubmit=attempt(async(e,mode)=>{
   e.preventDefault();const f=new FormData(e.target),button=e.target.querySelector('button');
   button.disabled=true;
@@ -238,10 +272,16 @@ export async function startCloud(client) {
  adminContent=function(){
   const html=oldAdminContent();
   if(adminTab==='settings')return html.replace(/<p class="tiny">Votos mínimos[\s\S]*?<\/p>/,'').replace(/(<input[^>]*name="pix"[^>]*) required/g,'$1');
+  if(adminTab==='products')return html.replace('<select name="status">','<select name="status"><option value="archived">Arquivado (rascunho)</option>');
   return html;
  };
  // Fetch current state after reconnect/focus; do not cache private domain data locally.
- client.auth.onAuthStateChange(event=>{
+ client.auth.onAuthStateChange((event,session)=>{
+  if(recoveryUserId&&session?.user?.id!==recoveryUserId)recoveryUserId=null;
+  if(event==='PASSWORD_RECOVERY'&&session?.user?.id){
+   recoveryUserId=session.user.id;
+   setTimeout(()=>{if(recoveryUserId===session.user.id)showPasswordReset()},0);
+  }
   if(event==='SIGNED_OUT'){++syncGeneration;user=null;db.orders=[];db.cart=[];db.suggestions=[];render()}
   setTimeout(()=>refresh().catch(error=>console.warn(message(error))),0)
  });

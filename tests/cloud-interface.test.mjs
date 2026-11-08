@@ -32,7 +32,9 @@ function mockClient({isAdmin=false,signedIn=true}={}){
   auth:{
    async getUser(){return {data:{user:signedIn?{id:'customer-a'}:null}}},
    async getSession(){return {data:{session:signedIn?{}:null}}},
-   onAuthStateChange(){return {}},
+   onAuthStateChange(callback){this.emit=callback;return {}},
+   async resetPasswordForEmail(email,options){calls.push({resetEmail:email,options});return {error:null}},
+   async updateUser(){calls.push({passwordChanged:true});return {error:null}},
    async signOut(){signedIn=false;return {error:null}}
   },
   from,async rpc(name,args){calls.push({rpc:name,args});return {data:name==='triunfo_is_admin'?isAdmin:name==='triunfo_vote_totals'?[]:name==='triunfo_create_order'?oid:null,error:null}},
@@ -42,7 +44,7 @@ function mockClient({isAdmin=false,signedIn=true}={}){
  };
 }
 async function mount(options={}){
- const dom=new JSDOM('<div id="app"></div>',{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true});
+ const dom=new JSDOM('<div id="app"></div>',{url:options.url||'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window;
  const observers=[],NativeObserver=w.MutationObserver;
  w.MutationObserver=class extends NativeObserver{constructor(callback){super(callback);observers.push(this)}};
@@ -131,5 +133,31 @@ test('cancellation requires an in-page confirmation before calling the server',a
   assert.equal(m.client.calls.filter(c=>c.rpc==='triunfo_cancel_order').length,0);
   await m.w.applyCloudCancellation(oid);
   assert.equal(m.client.calls.filter(c=>c.rpc==='triunfo_cancel_order').length,1);
+ }finally{m.close()}
+});
+test('recovery on validation returns to validation; only recovery for the current user changes password',async()=>{
+ const url='https://pauloabispo000-hue.github.io/triunfo-vitrine/validacao.html';
+ const m=await mount({url});try{
+  m.w.requestCloudRecovery();
+  const request=m.w.document.querySelector('#modal form');
+  request.elements.email.value='homologacao@example.invalid';
+  await m.w.sendCloudRecovery({preventDefault(){},target:request});
+  const call=m.client.calls.find(c=>c.resetEmail);
+  assert.equal(call.options.redirectTo,url);
+  const unsolicited=m.w.document.createElement('form');
+  unsolicited.innerHTML='<input name="password" value="Example-pass-1"><input name="confirm" value="Example-pass-1"><button></button>';
+  await m.w.finishCloudRecovery({preventDefault(){},target:unsolicited});
+  assert.equal(m.client.calls.some(c=>c.passwordChanged),false);
+  m.client.auth.emit('PASSWORD_RECOVERY',{user:{id:'customer-a'}});
+  await new Promise(resolve=>setTimeout(resolve,20));
+  const reset=m.w.document.querySelector('#modal form');
+  reset.elements.password.value='Example-pass-1';
+  reset.elements.confirm.value='different';
+  await m.w.finishCloudRecovery({preventDefault(){},target:reset});
+  assert.equal(m.client.calls.some(c=>c.passwordChanged),false);
+  reset.elements.confirm.value='Example-pass-1';
+  await m.w.finishCloudRecovery({preventDefault(){},target:reset});
+  assert.equal(m.client.calls.some(c=>c.passwordChanged),true);
+  assert.equal(m.w.eval('user'),null);
  }finally{m.close()}
 });

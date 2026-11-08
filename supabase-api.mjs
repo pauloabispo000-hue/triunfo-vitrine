@@ -3,7 +3,7 @@
  * Not loaded by index.html until hosted integration passes acceptance checks.
  * Inject an official Supabase JS client configured with URL + publishable key only.
  */
-export function createTriunfoAPI(client) {
+export function createTriunfoAPI(client, { redirectTo='https://pauloabispo000-hue.github.io/triunfo-vitrine/' }={}) {
  const table=name=>client.from('triunfo_'+name);
  async function unwrap(query){const {data,error}=await query;if(error)throw error;return data}
  const rpc=(name,args)=>unwrap(client.rpc('triunfo_'+name,args));
@@ -16,9 +16,17 @@ export function createTriunfoAPI(client) {
   async register(email,password,displayName){
    const {data,error}=await client.auth.signUp({email,password,options:{
     data:{display_name:String(displayName).trim().slice(0,90)},
-    emailRedirectTo:'https://pauloabispo000-hue.github.io/triunfo-vitrine/'
+    emailRedirectTo:redirectTo
    }});
    if(error)throw error;return data;
+  },
+  async requestPasswordReset(email){
+   const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
+   if(error)throw error;
+  },
+  async changePassword(password){
+   const {error}=await client.auth.updateUser({password});
+   if(error)throw error;
   },
   async login(email,password){const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;return data},
   async logout(){const {error}=await client.auth.signOut();if(error)throw error},
