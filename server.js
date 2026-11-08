@@ -85,10 +85,10 @@ app.post('/api/orders',auth,asyncRoute(async(req,res)=>{
  const items=req.body?.items;if(!Array.isArray(items)||!items.length||items.length>30)return res.sendStatus(400);
  const client=await pool.connect();
  try{await client.query('BEGIN');let total=0;const entries=[];
- for(const item of items){if(!Number.isInteger(item.qty)||item.qty<1||item.qty>99)return res.status(400).json({error:'Quantidade inválida'});
- const q=await client.query("SELECT id,price_cents FROM products WHERE id=$1 AND status='available'",[item.id]);if(!q.rowCount)return res.status(400).json({error:'Produto indisponível'});
+ for(const item of items){if(!Number.isInteger(item.qty)||item.qty<1||item.qty>99)throw Object.assign(Error('Quantidade inválida'),{status:400});
+ const q=await client.query("SELECT id,price_cents FROM products WHERE id=$1 AND status='available'",[item.id]);if(!q.rowCount)throw Object.assign(Error('Produto indisponível'),{status:400});
  const price=q.rows[0].price_cents;total+=price*item.qty;entries.push({id:item.id,qty:item.qty,price});}
- if(total<=0||total>100000000)return res.sendStatus(400);
+ if(total<=0||total>100000000)throw Object.assign(Error('Total inválido'),{status:400});
  const q=await client.query('INSERT INTO orders(user_id,total_cents) VALUES($1,$2) RETURNING *',[req.user.id,total]);
  for(const i of entries)await client.query('INSERT INTO order_items(order_id,product_id,qty,unit_price_cents) VALUES($1,$2,$3,$4)',[q.rows[0].id,i.id,i.qty,i.price]);
  await client.query('COMMIT');res.status(201).json({order:q.rows[0]});
@@ -136,5 +136,5 @@ app.get('/api/events',auth,(req,res)=>{
  const timer=setInterval(()=>res.write('event: refresh\ndata: {}\n\n'),5000);
  req.on('close',()=>clearInterval(timer));
 });
-app.use((err,_req,res,_next)=>{console.error(err);res.status(err.code==='LIMIT_FILE_SIZE'?413:500).json({error:err.code==='LIMIT_FILE_SIZE'?'Arquivo muito grande':'Erro interno'})});
+app.use((err,_req,res,_next)=>{console.error(err);res.status(err.code==='LIMIT_FILE_SIZE'?413:err.status||500).json({error:err.code==='LIMIT_FILE_SIZE'?'Arquivo muito grande':err.status===400?err.message:'Erro interno'})});
 app.listen(Number(process.env.PORT||3000),()=>console.log('Triunfo API started'));
