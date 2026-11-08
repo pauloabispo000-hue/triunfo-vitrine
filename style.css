@@ -46,3 +46,14 @@ main:has(.grid){max-height:var(--art-height);overflow-y:auto;overscroll-behavior
  .product .actions{flex-direction:row;flex-wrap:wrap}
  .product .actions .btn{flex:1 1 auto}
 }
+
+/* Classification colors supplement the written status inside each card. */
+.product[data-status]{background:var(--status-bg);border:2px solid var(--status-accent)}
+.product[data-status] .photo{background:var(--status-photo)}
+.product[data-status] .content>.muted:first-child{color:var(--status-text);font-weight:700;margin-bottom:5px}
+.product[data-status="available"]{--status-bg:#edf8ef;--status-accent:#4b8a59;--status-photo:#d6edda;--status-text:#235b30}
+.product[data-status="voting"]{--status-bg:#fff7dd;--status-accent:#bf9130;--status-photo:#f8e6b2;--status-text:#72500c}
+.product[data-status="viability"]{--status-bg:#edf4ff;--status-accent:#527db4;--status-photo:#d7e5f8;--status-text:#284e80}
+.product[data-status="production"]{--status-bg:#f5edfc;--status-accent:#9368b1;--status-photo:#e8d9f4;--status-text:#633782}
+.product[data-status="archived"]{--status-bg:#f0f1f3;--status-accent:#858b94;--status-photo:#dee1e5;--status-text:#444b55}
+.product[data-status="pending"]{--status-bg:#fff0e6;--status-accent:#b87847;--status-photo:#f8deca;--status-text:#79451f}
