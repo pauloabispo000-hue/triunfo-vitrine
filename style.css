@@ -25,7 +25,9 @@ header{z-index:10}
 
 /* Keep product lists inside the full-width artwork, including large catalogs. */
 main:has(.grid){max-height:var(--art-height);overflow-y:auto;overscroll-behavior-y:contain;padding:12px 16px 20px;scrollbar-gutter:stable}
-.grid{grid-template-columns:repeat(auto-fill,minmax(150px,180px));gap:10px;align-items:start}
+.grid{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:180px;gap:10px;align-items:start;overflow-x:auto;max-width:100%;padding-bottom:10px;scroll-snap-type:x proximity;scroll-padding-inline:2px;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#b98b45 #38251c}
+.grid>.product{scroll-snap-align:start}
+.grid>p{min-width:150px}
 .product{min-width:0;border-radius:11px}
 .product .photo{height:76px;font-size:42px}
 .product .content{padding:9px;font-size:14px;overflow-wrap:anywhere}
@@ -38,7 +40,7 @@ main:has(.grid){max-height:var(--art-height);overflow-y:auto;overscroll-behavior
 .sectionhead h2{font-size:17px;padding:7px 12px}
 @media(max-width:650px){
  main:has(.grid){padding:10px 10px calc(12px + var(--bottom-height))}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .grid{grid-template-columns:none;grid-auto-columns:min(160px,72vw);gap:8px}
  .product .photo{height:72px;font-size:38px}
  .product .content{padding:8px}
  .product .actions{flex-direction:row;flex-wrap:wrap}
