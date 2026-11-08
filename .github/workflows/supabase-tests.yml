@@ -1,0 +1,27 @@
+name: Validate Supabase preparation
+on:
+  pull_request:
+  push:
+    paths:
+      - 'supabase/**'
+      - 'supabase-api.mjs'
+      - 'cloud-*'
+      - 'app.js'
+      - 'index.html'
+      - 'vendor/**'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/supabase-tests.yml'
+permissions:
+  contents: read
+jobs:
+  database-and-receipts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --ignore-scripts
+      - run: npm run test:supabase
+      - run: node --check supabase-api.mjs
