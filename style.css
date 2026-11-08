@@ -59,3 +59,8 @@ body::before{top:var(--header-height,112px);bottom:0;background-position:center 
 header,.bottom,.modalback{z-index:10}
 body::before,body::after{pointer-events:none!important}
 @media(min-width:651px){body::before{z-index:0!important}body::after{z-index:0!important}}
+
+/* Fundo da vitrine: 20% de transparência (80% de opacidade).
+   Não altera a tela de abertura nem a opacidade dos cartões e botões. */
+@media(min-width:651px){body::before,body::after{opacity:.8!important}}
+@media(max-width:650px){body::before,body::after{opacity:.8!important}}
