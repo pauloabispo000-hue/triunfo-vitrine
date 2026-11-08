@@ -57,3 +57,36 @@ main:has(.grid){max-height:var(--art-height);overflow-y:auto;overscroll-behavior
 .product[data-status="production"]{--status-bg:#f5edfc;--status-accent:#9368b1;--status-photo:#e8d9f4;--status-text:#633782}
 .product[data-status="archived"]{--status-bg:#f0f1f3;--status-accent:#858b94;--status-photo:#dee1e5;--status-text:#444b55}
 .product[data-status="pending"]{--status-bg:#fff0e6;--status-accent:#b87847;--status-photo:#f8deca;--status-text:#79451f}
+
+/* Dark theme, including native controls and classification surfaces. */
+:root{color-scheme:dark;color:#f0e9df;background:#161310;--border:#50483f}
+body{color:#f0e9df;background:#161310}
+header{background:#211a16;color:#f5eee4;box-shadow:0 2px 12px #0006}
+.brand{color:#e5bd70}
+.search,.field input,.field select{background:#282420;color:#f5eee4;border:1px solid #615447}
+input::placeholder{color:#bdb1a4;opacity:1}
+input[type=file]::file-selector-button{background:#40372e;color:#f5eee4;border:1px solid #79664e;border-radius:6px;padding:7px}
+.panel,.modal,.bottom{background:#24201c;color:#f0e9df;box-shadow:0 2px 12px #0005}
+.modalback{background:#000b}
+.bottom{border-top:1px solid #50483f}
+.bottom button{color:#eee0ce}
+.sectionhead h2,main>h2{background:#24201cee;color:#f5eee4}
+.product{background:#28231f;color:#f5eee4}
+.photo{background:#3a3025}
+.price,.product .price{color:#f1ca85}
+.muted,.tiny,.empty{color:#c0b5a8}
+.line{border-color:#50483f}
+.btn{background:#d5ac66;color:#21170c}
+.btn.secondary{background:#44382b;color:#f3e3cb}
+.btn.outline{border-color:#d5ac66;color:#f1ca85}
+.badge{background:#463725;color:#f1d39e}
+.notice{background:#42331c;color:#f6d798}
+.notice.ok{background:#1f3a2b;color:#b5e6c3}
+.count{background:#d8aa5e;color:#21170c}
+.product[data-status="available"]{--status-bg:#1d3025;--status-accent:#74b785;--status-photo:#274332;--status-text:#b5e6c3}
+.product[data-status="voting"]{--status-bg:#362e1c;--status-accent:#d6af55;--status-photo:#4a3d22;--status-text:#f4d88f}
+.product[data-status="viability"]{--status-bg:#1e2c3e;--status-accent:#7fa7dc;--status-photo:#2a3e56;--status-text:#bdd7fa}
+.product[data-status="production"]{--status-bg:#30243c;--status-accent:#b893d4;--status-photo:#423150;--status-text:#dec4f1}
+.product[data-status="archived"]{--status-bg:#292d32;--status-accent:#9da6b3;--status-photo:#393f46;--status-text:#d5dbe3}
+.product[data-status="pending"]{--status-bg:#3a291f;--status-accent:#d89d73;--status-photo:#513829;--status-text:#f5c7a5}
+button:focus-visible,a:focus-visible{outline:2px solid #f1ca85;outline-offset:3px}
