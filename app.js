@@ -67,6 +67,19 @@ function statusSet(pid,s){db.products.find(p=>p.id===pid).status=s;save();render
 function review(sid,yes){let s=db.suggestions.find(x=>x.id===sid);s.status=yes?'accepted':'rejected';if(yes)db.products.push({id:id(),name:s.name,price:0,status:'voting',image:s.image,yes:0,no:0});save();render()}
 function settingsSave(e){e.preventDefault();let f=new FormData(e.target);db.settings={...db.settings,store:f.get('store'),pix:f.get('pix')};save();render()}
 function restoreSession(){try{const cached=JSON.parse(sessionStorage.getItem('triunfo-demo-user'));const account=db.users.find(u=>u.id===cached?.id);user=account&&account.username===cached.username?{id:account.id,username:account.username,role:account.role}:null}catch{user=null}render()}
+// Initial administrator for this local prototype; no plaintext password is stored.
+function initializeLocalAdmin(){
+  const version='admin-access-20261108-1';
+  db.settings=db.settings||{};
+  db.users=db.users||[];
+  if(db.settings.adminAccessVersion===version)return;
+  let account=db.users.find(u=>String(u.username||'').toLowerCase()==='admin');
+  if(!account){account={id:id()};db.users.push(account)}
+  Object.assign(account,{username:'Admin',role:'admin',salt:"c3ee22ed1492feb85d75d9da884544ee93818390727fa6a7",passwordHash:"408075b4036a23377f483a89e545a6710cf1e46d2c2d5522b8a88a73920a2e19"});
+  db.settings.adminAccessVersion=version;
+  save();
+}
+initializeLocalAdmin();
 restoreSession();
 const headerSizeObserver=new ResizeObserver(entries=>{
   for(const entry of entries){
