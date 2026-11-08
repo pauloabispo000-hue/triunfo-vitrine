@@ -96,3 +96,24 @@ body::before,body::after{pointer-events:none!important}
 @media(min-width:651px){
  body::before,body::after{background-image:url("assets/abertura-desktop-v3.jpg")!important;}
 }
+
+/* Desktop: prolongamento nítido do padrão, sem laterais desfocadas. */
+@media(min-width:651px){
+ body::before{
+   inset:var(--header-height,112px) 0 0!important;
+   transform:none!important;
+   filter:none!important;
+   background-image:url("assets/abertura-triunfo.jpg?v=edges-clear-14")!important;
+   background-size:100% 100%!important;
+   background-position:center top!important;
+   background-repeat:no-repeat!important;
+   opacity:.8!important;
+ }
+ body::after{
+   background-image:url("assets/abertura-triunfo.jpg?v=edges-clear-14")!important;
+   background-size:auto 100%!important;
+   background-position:center top!important;
+   background-repeat:no-repeat!important;
+   opacity:.8!important;
+ }
+}
