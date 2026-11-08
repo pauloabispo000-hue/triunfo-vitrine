@@ -6,10 +6,11 @@ A solução escolhida para validação é Entrar com Google via Supabase Auth. O
 | --- | --- | --- |
 | Brevo | 300 mensagens por dia no plano gratuito. Endereço verificado de webmail pode ter o domínio substituído temporariamente por `brevosend.com`. | Tem SMTP para Supabase, mas a substituição temporária, a verificação do remetente e possíveis recusas de entrega impedem tratar a opção como homologada. |
 | Mailjet | 200 mensagens por dia e 6.000 por mês. O serviço alerta sobre falhas de DMARC e entrega ao usar webmail. | Tem SMTP, mas depender de um remetente de webmail compromete a entrega de links de acesso. |
+| SMTP2GO | 1.000 mensagens por mês e 200 por dia. Sem domínio verificado, 25 por hora. O cadastro exige e-mail de domínio próprio ou empresarial. | Remetente individual pode ser verificado após o cadastro, mas o serviço não aceita Gmail ou Yahoo para abrir a conta. |
 | SendGrid | 100 mensagens por dia durante um teste de 60 dias. | O envio contínuo exige plano pago. |
 | SMTP padrão do Supabase | Duas mensagens por hora, apenas para endereços da equipe do projeto. | Útil para testes internos, insuficiente para cadastro público. |
 
-Fontes oficiais: [Brevo Free](https://help.brevo.com/hc/pt/articles/208580669), [Brevo e domínio](https://help.brevo.com/hc/en-us/articles/16045394674066), [Brevo SMTP](https://help.brevo.com/hc/en-us/articles/115000188150), [Mailjet Free](https://documentation.mailjet.com/hc/en-us/articles/19154256993051), [Mailjet e webmail](https://documentation.mailjet.com/hc/en-us/articles/19308800104091), [SendGrid](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/upgrading-your-plan), [SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+Fontes oficiais: [Brevo Free](https://help.brevo.com/hc/pt/articles/208580669), [Brevo e domínio](https://help.brevo.com/hc/en-us/articles/16045394674066), [Brevo SMTP](https://help.brevo.com/hc/en-us/articles/115000188150), [Mailjet Free](https://documentation.mailjet.com/hc/en-us/articles/19154256993051), [Mailjet e webmail](https://documentation.mailjet.com/hc/en-us/articles/19308800104091), [SMTP2GO](https://support.smtp2go.com/hc/en-gb/articles/12922807451289), [SendGrid](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/upgrading-your-plan), [SMTP Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
 
 ## Acesso e recuperação
 
@@ -26,3 +27,7 @@ Referências: [Supabase com Google](https://supabase.com/docs/guides/auth/social
 38 testes automatizados locais aprovados, incluindo destino do OAuth e ausência da opção fora da validação. Custo adicional US$ 0. Nenhum serviço de envio foi contratado.
 
 O cliente Web foi criado e o provedor Google está habilitado no Supabase. A origem autorizada é `https://pauloabispo000-hue.github.io`. O callback do Google é `https://omykabdlwtekyagvxipi.supabase.co/auth/v1/callback`. A opção de ignorar a verificação de nonce e o login sem e-mail ficaram desativados. A confirmação de e-mail por senha não foi modificada.
+
+A implantação e a suíte de testes passaram no GitHub Actions para o commit de implementação `8db73bb`. A tentativa de abrir a tela do Google a partir do endpoint hospedado encontrou bloqueio de revisão automática do navegador para `accounts.google.com`, pois a conta de teste ainda não havia sido autorizada explicitamente. Permanecem pendentes o primeiro login de uma conta de cliente, a sessão após retorno, a reentrada, o isolamento do cliente e a confirmação em aparelho móvel.
+
+A página publicada carregou o módulo novo em largura de desktop e em tela estreita simulada, sem transbordamento horizontal. A área da conta abriu com a sessão administrativa existente. Isso verifica a publicação, não o callback do Google em sessão de cliente.
