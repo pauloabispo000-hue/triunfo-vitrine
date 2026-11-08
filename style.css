@@ -24,3 +24,15 @@ body::before{top:var(--header-height,112px);bottom:0;background-position:center 
 /* Uma única camada para a abertura, sem repetição de fundo. */
 #opening-screen::before{content:none!important;display:none!important}
 #opening-screen img{object-fit:cover!important}
+
+
+/* Desktop: preserve the complete Triunfo crest without cropping. */
+@media(min-width:651px){
+  body::before{
+    background-color:#38251c;
+    background-image:linear-gradient(rgba(56,37,28,.12),rgba(56,37,28,.12)),url("assets/abertura-triunfo.jpg?v=desktop-bg-fit-20261108-10");
+    background-size:cover,auto 100%;
+    background-position:center center,center top;
+    background-repeat:no-repeat,no-repeat;
+  }
+}
