@@ -28,15 +28,15 @@ A interface pública em GitHub Pages continua operando como **protótipo local**
 ## Fluxo Pix sem integração
 O administrador cadastra a chave Pix. O cliente efetua o pagamento externamente e envia o comprovante (JPEG, PNG ou WebP, até 5 MB). O backend salva o arquivo em diretório privado, extrai texto com OCR e tenta identificar o valor. Se identificar um valor único, compara-o com o pedido.
 
-Estados: `awaiting_receipt`, `amount_matches`, `amount_pending`, `manual_review`, `confirmed`. O OCR **não comprova que a transferência foi efetivada**: somente o administrador pode confirmar o recebimento, após verificar a conta bancária. PDF e múltiplos comprovantes somados exigem desenvolvimento adicional.
+Estados: `awaiting_receipt`, `amount_matches`, `amount_pending`, `manual_review`, `confirmed`. O OCR **não comprova que a transferência foi efetivada**: somente o administrador pode confirmar o recebimento, após verificar a conta bancária. Comprovantes complementares em imagens são somados para calcular o saldo pendente. PDF ainda exige desenvolvimento adicional. Se o total exceder o pedido ou houver leitura inconclusiva, o pedido segue para análise manual.
 
 ## Segurança e privacidade
 - Não publicar recibos ou fotos pessoais no repositório ou em URLs públicas.
 - Proteger os arquivos por autenticação e autorização; o servidor atual **ainda não possui rota de consulta/download** de comprovantes.
-- Implementar prevenção de comprovantes reutilizados entre pedidos e detecção de inconsistências.
+- A API bloqueia reenvio de arquivos idênticos pelo SHA-256; comprovantes visualmente alterados ou diferentes para a mesma transação ainda exigem análise e controles adicionais.
 - Configurar política LGPD, consentimento, retenção, exclusão e auditoria.
 - A implementação atual de eventos envia aviso periódico de atualização a cada 5 segundos; **a interface ainda não consome esses eventos**.
-- Antes da produção: implementar CSRF protection, proteção de upload e rate limiting adicional, testes automatizados, monitoramento e validação das configurações de TLS/cookies.
+- Antes da produção: reforçar CSRF protection (a API já exige Origin para operações de escrita), proteção de upload e rate limiting adicional, testes automatizados, monitoramento e validação das configurações de TLS/cookies.
 
 ## Endpoints disponíveis no código
 `GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`, `GET /api/products`, `GET /api/admin/products`, `POST /api/admin/products`, `PATCH /api/admin/products/:id`, `POST /api/votes`, `GET /api/admin/summary`, `GET /api/settings/pix`, `PUT /api/admin/settings/pix`, `POST /api/orders`, `GET /api/orders`, `POST /api/orders/:id/receipts`, `POST /api/admin/orders/:id/confirm`, `GET /api/events`.
