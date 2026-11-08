@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createReceiptHandler,imageMime,MAX_FILE} from '../supabase/functions/submit-receipt/core.mjs';
 const origin='https://pauloabispo000-hue.github.io';
+const validPNG=new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8//8/AwMDEwMDAwMDAwAkBgMB/DXemwAAAABJRU5ErkJggg==','base64'));
 const order='10000000-0000-4000-8000-000000000001';
 function fixture({authorized=true,owned=true,duplicate=false,uploadError=false}={}){
  const calls=[];
@@ -14,13 +15,14 @@ function fixture({authorized=true,owned=true,duplicate=false,uploadError=false}=
  };
  return {calls,handler:createReceiptHandler({client,origin})};
 }
-function request(bytes=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]),options={}){
+function request(bytes=validPNG,options={}){
  const body=new FormData();body.set('order_id',order);body.set('receipt',new Blob([bytes],{type:options.type||'image/png'}),'test.png');
  return new Request('https://example.test/submit-receipt',{method:'POST',headers:{origin,authorization:'Bearer fake-test-token',...options.headers},body});
 }
 test('signatures recognize PNG/JPEG/WebP and reject unknown content',()=>{
- assert.equal(imageMime(new Uint8Array([255,216,255,0])),'image/jpeg');
- assert.equal(imageMime(new TextEncoder().encode('RIFF0000WEBP')),'image/webp');
+ assert.equal(imageMime(validPNG),'image/png');
+ assert.equal(imageMime(new Uint8Array([255,216,255,0])),null);
+ assert.equal(imageMime(new TextEncoder().encode('RIFF0000WEBP')),null);
  assert.equal(imageMime(new TextEncoder().encode('<script>')) ,null);
 });
 test('unauthenticated/foreign-origin/foreign-order requests cannot upload',async()=>{
@@ -54,4 +56,12 @@ test('storage failure never registers a receipt',async()=>{
  const {calls,handler}=fixture({uploadError:true});
  assert.equal((await handler(request())).status,503);
  assert.ok(!calls.some(c=>c[0]==='rpc'));
+});
+
+test('truncated PNG and damaged CRC never reach storage',async()=>{
+ const {handler,calls}=fixture();
+ assert.equal((await handler(request(validPNG.subarray(0,20)))).status,400);
+ const damaged=validPNG.slice();damaged[damaged.length-1]^=1;
+ assert.equal((await handler(request(damaged))).status,400);
+ assert.equal(calls.length,0);
 });

@@ -6,7 +6,7 @@ const db = new PGlite();
 await db.exec(`
  create role anon; create role authenticated; create role service_role;
  create schema auth; create schema storage;
- create table auth.users(id uuid primary key,raw_user_meta_data jsonb default '{}');
+ create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}');
  create function auth.uid() returns uuid language sql stable as
  $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid; $$;
  grant usage on schema auth to anon,authenticated,service_role;
@@ -19,6 +19,7 @@ await db.exec(`
 `);
 await db.exec(await readFile(new URL('../supabase/migrations/202611080001_triunfo.sql',import.meta.url),'utf8'));
 await db.exec(await readFile(new URL('../supabase/migrations/202611080002_image_safety.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations/202611080003_validation_cleanup.sql',import.meta.url),'utf8'));
 const uid = ['10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003'];
 const product='20000000-0000-4000-8000-000000000001';
 const voting='20000000-0000-4000-8000-000000000002';
@@ -154,6 +155,13 @@ await test('stored images reject attribute injection and unsafe data URLs',async
   await assert.rejects(asUser(0,()=>db.query('insert into public.triunfo_suggestions(name,image) values($1,$2)',['Teste',image])),/check constraint/);
  }
  await asUser(0,()=>db.query('insert into public.triunfo_suggestions(name,image) values($1,$2)',['Teste','data:image/png;base64,aGVsbG8=']));
+});
+await test('temporary validation cleanup is service-only and preserves unrelated data',async()=>{
+ await assert.rejects(asUser(0,()=>db.query('select public.triunfo_cleanup_validation(gen_random_uuid())')),/permission denied/);
+ const count=await scalar('select count(*)::int from public.triunfo_orders');
+ const result=await asUser(null,()=>scalar('select public.triunfo_cleanup_validation(gen_random_uuid())'),'service_role');
+ assert.equal(result.orders_removed,0);
+ assert.equal(await scalar('select count(*)::int from public.triunfo_orders'),count);
 });
 console.log(passed+' database checks passed. Hosted Auth, Storage and Realtime remain untested.');
 await db.close();

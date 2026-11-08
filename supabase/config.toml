@@ -3,3 +3,6 @@ project_id = "triunfo-vitrine"
 [functions.submit-receipt]
 # Handler validates the token using Auth.getUser; supports publishable API keys.
 verify_jwt = false
+
+[functions.triunfo-validation]
+verify_jwt = false

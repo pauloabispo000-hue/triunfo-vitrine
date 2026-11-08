@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Script } from 'node:vm';
 
-const bundle=await build({entryPoints:['cloud-entry.mjs'],bundle:true,write:false,format:'iife',globalName:'CloudUI',platform:'browser',external:['./vendor/supabase.mjs']});
+const bundle=await build({entryPoints:['cloud-entry.mjs'],bundle:true,write:false,format:'iife',globalName:'CloudUI',platform:'browser',external:['./vendor/supabase.mjs','./assets/ocr/*']});
 const app=await readFile(new URL('../app.js',import.meta.url),'utf8');
 const pid='20000000-0000-4000-8000-000000000001';
 const oid='30000000-0000-4000-8000-000000000001';

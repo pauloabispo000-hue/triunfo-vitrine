@@ -1,4 +1,6 @@
 import { createTriunfoAPI } from './supabase-api.mjs';
+import { attachValidationTools } from './validation-tools.mjs';
+import { recognizeReceipt } from './receipt-ocr.mjs';
 
 export async function startCloud(client) {
  const api=createTriunfoAPI(client);
@@ -22,6 +24,7 @@ export async function startCloud(client) {
   db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.user_id})),
    cart:cart.map(i=>({id:i.product_id,qty:i.qty})),orders,users:[],votes:{}};
   render();
+  attachValidationTools(client,user?.role==='admin');
  }
  function refresh(){
   refreshRequested=true;
@@ -166,9 +169,23 @@ export async function startCloud(client) {
    const blob=await api.receiptFile(r.object_path),url=URL.createObjectURL(blob);receiptURLs.push(url);
    cards.push(`<section class="line"><img src="${url}" alt="Comprovante de pagamento" style="max-width:100%">
     <p>${r.recognized_cents===null?'Leitura pendente':money(r.recognized_cents/100)}</p>
-    ${admin()?'<label class="field">Valor lido no documento (R$)<input id="amount-'+r.id+'" type="number" step=".01" min=".01"></label><label class="field">Identificador da transação (opcional)<input id="transaction-'+r.id+'" maxlength="64"></label><button class="btn" onclick="recordPayment(\''+r.id+'\')">Registrar leitura</button>':''}</section>`);
+    ${admin()?'<button class="btn secondary" onclick="readCloudReceiptOCR(\''+r.id+'\',\''+esc(r.object_path)+'\')">Ler imagem com OCR local</button><p class="tiny" id="ocr-'+r.id+'">A leitura não confirma recebimento bancário.</p><label class="field">Valor lido no documento (R$)<input id="amount-'+r.id+'" type="number" step=".01" min=".01"></label><label class="field">Identificador da transação (opcional)<input id="transaction-'+r.id+'" maxlength="64"></label><button class="btn" onclick="recordPayment(\''+r.id+'\')">Registrar leitura</button>':''}</section>`);
   }
   const list=$('#cloud-receipt-list');if(list)list.innerHTML=cards.join('');
+ });
+ window.readCloudReceiptOCR=attempt(async(receiptId,path)=>{
+  if(!admin())return;
+  const status=$('#ocr-'+receiptId);if(!status)return;
+  status.textContent='Lendo no seu dispositivo…';
+  try{
+   const blob=await api.receiptFile(path);
+   const result=await recognizeReceipt(blob,(_step,p)=>{if(status.isConnected)status.textContent='Leitura local: '+Math.round((p||0)*100)+'%'});
+   if(!status.isConnected)return;
+   if(result.cents===null){status.textContent='Leitura inconclusiva. Faça a conferência manual.';return}
+   $('#amount-'+receiptId).value=(result.cents/100).toFixed(2);
+   if(result.transactionId)$('#transaction-'+receiptId).value=result.transactionId;
+   status.textContent='Sugestão OCR: '+money(result.cents/100)+'. Confira a imagem e clique em Registrar leitura. O crédito bancário continua não confirmado.';
+  }catch(e){if(status.isConnected)status.textContent='OCR indisponível: '+message(e)}
  });
  recordPayment=attempt(async(receiptId)=>{
   if(!admin())return;const raw=$('#amount-'+receiptId)?.value;
