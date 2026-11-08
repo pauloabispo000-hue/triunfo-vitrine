@@ -90,3 +90,6 @@ input[type=file]::file-selector-button{background:#40372e;color:#f5eee4;border:1
 .product[data-status="archived"]{--status-bg:#292d32;--status-accent:#9da6b3;--status-photo:#393f46;--status-text:#d5dbe3}
 .product[data-status="pending"]{--status-bg:#3a291f;--status-accent:#d89d73;--status-photo:#513829;--status-text:#f5c7a5}
 button:focus-visible,a:focus-visible{outline:2px solid #f1ca85;outline-offset:3px}
+
+/* Classification heading at the top of each product card. */
+.product-heading{padding:8px 9px;background:var(--status-photo,#3a3025);color:var(--status-text,#f0e9df);font-size:12px;font-weight:700;line-height:1.3;border-bottom:1px solid var(--status-accent,#615447)}
