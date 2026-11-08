@@ -11,3 +11,9 @@ main>h2{background:rgba(247,243,235,.94);padding:12px 16px;border-radius:10px}
 .product,.panel{background:#fff}
 
 body::before{top:var(--header-height,112px);bottom:0;background-position:center top}
+
+/* Tela de abertura: imagem integral, opaca, por cinco segundos. */
+#opening-screen{position:fixed;inset:0;z-index:9999;width:100%;height:100dvh;background:#38251c;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}
+#opening-screen img{display:block;width:100%;height:100%;object-fit:cover;opacity:1}
+#opening-screen.opening-screen-hidden{opacity:0;visibility:hidden;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#opening-screen{transition:none}}
