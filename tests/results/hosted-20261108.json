@@ -1,0 +1,215 @@
+{
+  "run_id": "74e6b0a6-01a7-4d19-b06d-c06b7863692b",
+  "passed": 35,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Bucket permanece privado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Duas contas com logins e sessões independentes",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Total calculado pelo servidor, ignorando preço adulterado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente B não consulta pedido de A",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente não altera preço nem estoque",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Realtime entre sessões de clientes independentes",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Metadados não promovem cliente a administrador",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Tabela de administradores inacessível ao cliente",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Rotina de testes inacessível ao cliente",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente não confirma pagamento",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente não registra valor privilegiado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Upload autenticado pela Edge Function",
+      "passed": true,
+      "detail": "{\"receipt_id\":\"93b63163-758c-4c8d-8708-de20284410e8\",\"status\":\"under_review\",\"ocr_status\":\"pending\",\"message\":\"Comprovante recebido para leitura e conferência administrativa. Não confirma recebimento bancário.\"}"
+    },
+    {
+      "name": "Registro contém hash calculado pelo servidor",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Arquivo registrado no bucket privado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Download autorizado íntegro",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Administrador visualiza comprovante",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente B não consulta comprovante de A",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente B não baixa arquivo de A",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "URL pública não entrega documento",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Duplicação bloqueada no mesmo pedido",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Duplicação bloqueada entre clientes",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Duplicatas não deixam novos arquivos no bucket",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Upload em pedido de outro cliente bloqueado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Arquivo com conteúdo inválido bloqueado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "PNG truncado bloqueado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Arquivo acima de 5 MB bloqueado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Valor inferior gera saldo pendente",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Comprovante complementar aceito",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Identificador de transação repetido bloqueado",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Soma exata permanece aguardando confirmação",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Valor excedente exige análise",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Leitura inconclusiva exige análise",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Segundo cliente envia seu comprovante",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Valor exato não confirma recebimento bancário",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Cliente não adultera leitura de comprovante",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "retained": {
+    "run_id": "74e6b0a6-01a7-4d19-b06d-c06b7863692b",
+    "order_id": "a9caee52-6a56-44b6-b274-139e01c33982",
+    "receipt_id": "904cf4a1-fa9f-438a-9729-adc707c3e501",
+    "object_path": "028a93dd-db9b-490c-9f11-5fc9ab6320f8/904cf4a1-fa9f-438a-9729-adc707c3e501"
+  },
+  "warning": "Valores digitados para testar regras; OCR e recebimento bancário não simulados como confirmados.",
+  "cleanup": {
+    "removed_users": 2,
+    "removed_orders": 2,
+    "removed_products": 1,
+    "verified_test_users_remaining": 0,
+    "verified_test_products_remaining": 0,
+    "verified_receipts_remaining": 0,
+    "verified_receipt_files_remaining": 0,
+    "bucket_public": false
+  },
+  "ocr": {
+    "mode": "local administrator-assisted Tesseract; no automatic bank confirmation",
+    "browser_private_image_cents": 125,
+    "local_fixture_cents": [
+      125,
+      50,
+      75,
+      null
+    ]
+  },
+  "interface": {
+    "mobile_width": 390,
+    "mobile_page_width": 390,
+    "desktop_visually_inspected": true,
+    "physical_devices_tested": false
+  }
+}

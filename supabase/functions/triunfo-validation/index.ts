@@ -6,6 +6,7 @@ const anon=Deno.env.get('SUPABASE_ANON_KEY')!;
 const origin='https://pauloabispo000-hue.github.io';
 const bucket='triunfo-receipts';
 const expiry=Date.parse('2026-11-09T23:59:59Z');
+const validationEnabled=false; // Authorized validation completed; no new fixture runs.
 let running=false;
 const unwrap=async(q:any)=>{const {data,error}=await q;if(error)throw Error(error.message);return data};
 const hash=async(bytes:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -38,7 +39,7 @@ Deno.serve(async(req:Request)=>{
  if(body.action==='cleanup'&&typeof body.run_id==='string'&&/^[0-9a-f-]{36}$/.test(body.run_id)){
   try{return reply(200,{cleanup:await cleanup(body.run_id)})}catch(e){return reply(500,{error:'Limpeza não concluída: '+e.message})}
  }
- if(Date.now()>expiry)return reply(410,{error:'Rotina temporária expirada'});
+ if(!validationEnabled||Date.now()>expiry)return reply(410,{error:'Rotina temporária expirada'});
  if(body.action!=='run')return reply(400,{error:'Ação inválida'});
  if(running)return reply(409,{error:'Validação já está em execução'});
  running=true;
