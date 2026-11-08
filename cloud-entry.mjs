@@ -1,8 +1,9 @@
-import { createTriunfoAPI } from './supabase-api.mjs';
+import { createTriunfoAPI } from './supabase-api.mjs?v=google-auth-1';
 import { recognizeReceipt } from './receipt-ocr.mjs?v=2';
 
 export async function startCloud(client) {
  const validationPage=location.pathname.endsWith('/validacao.html');
+ const googleEnabled=validationPage&&window.TRIUNFO_CLOUD?.googleOAuth===true;
  const api=createTriunfoAPI(client,validationPage?{
   redirectTo:'https://pauloabispo000-hue.github.io/triunfo-vitrine/validacao.html'
  }:undefined);
@@ -38,6 +39,13 @@ export async function startCloud(client) {
   return refreshFlight;
  }
  function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh().catch(error=>console.warn(message(error))),300)}
+ const googleButton=googleEnabled?'<button type="button" class="btn secondary" onclick="startGoogleLogin(this)">Entrar com Google</button>':'';
+ window.startGoogleLogin=attempt(async(button)=>{
+  if(!googleEnabled||button.disabled)return;
+  button.disabled=true;
+  try{await api.loginWithGoogle()}
+  catch(error){button.disabled=false;throw error}
+ });
  auth=function(mode){
   if(mode==='setup-admin')return alert('A permissão administrativa é concedida pelo responsável da loja.');
   const register=mode==='register';
@@ -46,7 +54,8 @@ export async function startCloud(client) {
    <label class="field">E-mail<input name="email" type="email" required autocomplete="email"></label>
    <label class="field">Senha<input name="password" type="password" minlength="8" required autocomplete="${register?'new-password':'current-password'}"></label>
    <button class="btn">${register?'Cadastrar':'Entrar'}</button></form>
-   ${register?'':'<button class="btn secondary" onclick="auth(\'register\')">Cadastrar</button> <button class="btn secondary" onclick="requestCloudRecovery()">Esqueci a senha</button>'}`);
+   <div class="actions">${googleButton}
+   ${register?'':'<button class="btn secondary" onclick="auth(\'register\')">Cadastrar</button> <button class="btn secondary" onclick="requestCloudRecovery()">Esqueci a senha</button>'}</div>`);
  };
  window.requestCloudRecovery=()=>{
   closeModal();modal(`<h2>Recuperar senha</h2><form onsubmit="sendCloudRecovery(event)">
@@ -93,7 +102,7 @@ export async function startCloud(client) {
  });
  logout=attempt(async()=>{await api.logout();checkoutRequest=null;user=null;db.cart=[];db.orders=[];closeModal();await refresh();nav('home')});
  accountView=function(){
-  if(!user)return '<h2>Minha conta</h2><div class="panel"><button class="btn" onclick="auth(\'login\')">Entrar</button> <button class="btn secondary" onclick="auth(\'register\')">Cadastrar</button></div>';
+  if(!user)return `<h2>Minha conta</h2><div class="panel"><div class="actions"><button class="btn" onclick="auth('login')">Entrar</button> <button class="btn secondary" onclick="auth('register')">Cadastrar</button>${googleButton}</div></div>`;
   return `<h2>Minha conta</h2><div class="panel"><b>${esc(user.username)}</b>
    ${user.photo?'<img class="preview" src="'+esc(user.photo)+'" alt="Foto do perfil">':''}
    <label class="field">Foto do perfil<input type="file" accept="image/*" onchange="uploadProfilePhoto(event)"></label>
@@ -297,8 +306,10 @@ export async function startCloud(client) {
 async function bootCloud(){
  try{
   const {createClient}=await import('./vendor/supabase.mjs');
+  const usePkce=location.pathname.endsWith('/validacao.html')&&window.TRIUNFO_CLOUD.googleOAuth===true;
   await startCloud(createClient(window.TRIUNFO_CLOUD.url,window.TRIUNFO_CLOUD.publishableKey,{
-   auth:{storageKey:'triunfo-cloud-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+   auth:{storageKey:'triunfo-cloud-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,
+    flowType:usePkce?'pkce':'implicit'}
   }));
  }catch(error){
   document.querySelector('#app').textContent='Não foi possível conectar à loja. Atualize a página para tentar novamente.';

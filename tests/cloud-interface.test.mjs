@@ -33,6 +33,7 @@ function mockClient({isAdmin=false,signedIn=true}={}){
    async getUser(){return {data:{user:signedIn?{id:'customer-a'}:null}}},
    async getSession(){return {data:{session:signedIn?{}:null}}},
    onAuthStateChange(callback){this.emit=callback;return {}},
+   async signInWithOAuth(options){calls.push({oauth:options});return {error:null}},
    async resetPasswordForEmail(email,options){calls.push({resetEmail:email,options});return {error:null}},
    async updateUser(){calls.push({passwordChanged:true});return {error:null}},
    async signOut(){signedIn=false;return {error:null}}
@@ -59,7 +60,7 @@ async function mount(options={}){
  new Script(app).runInContext(dom.getInternalVMContext());
  assert.equal(w.localStorage.getItem('triunfo-demo'),before);
  assert.equal(w.eval('user'),null);
- w.TRIUNFO_CLOUD={enabled:false};
+ w.TRIUNFO_CLOUD={enabled:false,googleOAuth:options.googleOAuth};
  new Script(bundle.outputFiles[0].text).runInContext(dom.getInternalVMContext());
  const client=mockClient(options),running=await w.CloudUI.startCloud(client);
  return {w,client,running,close(){for(const observer of observers)observer.disconnect();w.dispatchEvent(new w.Event('pagehide'));w.close()}};
@@ -160,4 +161,23 @@ test('recovery on validation returns to validation; only recovery for the curren
   assert.equal(m.client.calls.some(c=>c.passwordChanged),true);
   assert.equal(m.w.eval('user'),null);
  }finally{m.close()}
+});
+test('Google login uses the validation callback and is absent outside validation',async()=>{
+ const url='https://pauloabispo000-hue.github.io/triunfo-vitrine/validacao.html';
+ const validation=await mount({url,googleOAuth:true,signedIn:false});
+ try{
+  validation.w.nav('account');
+  const button=validation.w.document.querySelector('button[onclick="startGoogleLogin(this)"]');
+  assert.ok(button);
+  await validation.w.startGoogleLogin(button);
+  await validation.w.startGoogleLogin(button);
+  assert.equal(validation.client.calls.filter(c=>c.oauth).length,1);
+  assert.equal(validation.client.calls.find(c=>c.oauth).oauth.provider,'google');
+  assert.equal(validation.client.calls.find(c=>c.oauth).oauth.options.redirectTo,url);
+ }finally{validation.close()}
+ const main=await mount({googleOAuth:true,signedIn:false});
+ try{
+  main.w.nav('account');
+  assert.equal(main.w.document.querySelector('button[onclick="startGoogleLogin(this)"]'),null);
+ }finally{main.close()}
 });

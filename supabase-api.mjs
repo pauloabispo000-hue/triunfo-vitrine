@@ -29,6 +29,13 @@ export function createTriunfoAPI(client, { redirectTo='https://pauloabispo000-hu
    if(error)throw error;
   },
   async login(email,password){const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;return data},
+  async loginWithGoogle(){
+   const {error}=await client.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo,queryParams:{prompt:'select_account'}}
+   });
+   if(error)throw error;
+  },
   async logout(){const {error}=await client.auth.signOut();if(error)throw error},
   async account(){
    const id=await uid();
