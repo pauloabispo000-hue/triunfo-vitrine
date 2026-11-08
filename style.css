@@ -28,11 +28,27 @@ body::before{top:var(--header-height,112px);bottom:0;background-position:center 
 
 /* Desktop: preserve the complete Triunfo crest without cropping. */
 @media(min-width:651px){
+  /* Fundo ampliado nas laterais: a camada desfocada prolonga as cores/texturas,
+     enquanto a arte central permanece inteira e sem deformação. */
   body::before{
-    background-color:#38251c;
-    background-image:linear-gradient(rgba(56,37,28,.12),rgba(56,37,28,.12)),url("assets/abertura-triunfo.jpg?v=desktop-bg-fit-20261108-10");
-    background-size:cover,auto 100%;
-    background-position:center center,center top;
-    background-repeat:no-repeat,no-repeat;
+    content:"";
+    position:fixed;
+    inset:calc(var(--header-height,112px) - 14px) -14px -14px;
+    z-index:-2;
+    pointer-events:none;
+    background:url("assets/abertura-triunfo.jpg?v=desktop-extended-edges-20261108-11") center center/cover no-repeat;
+    filter:blur(18px) brightness(.72);
+    transform:scale(1.025);
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    top:var(--header-height,112px);
+    right:0;
+    bottom:0;
+    left:0;
+    z-index:-1;
+    pointer-events:none;
+    background:url("assets/abertura-triunfo.jpg?v=desktop-extended-edges-20261108-11") center top/auto 100% no-repeat;
   }
 }
