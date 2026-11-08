@@ -24,6 +24,8 @@ app.set('trust proxy',1);
 app.use(helmet());
 app.use(cors({origin:process.env.APP_ORIGIN,credentials:true}));
 app.use(express.json({limit:'64kb'}));
+// Reject cross-origin mutations before session-backed routes.
+app.use((req,res,next)=>{if(['GET','HEAD','OPTIONS'].includes(req.method))return next();const origin=req.get('origin');if(origin!==process.env.APP_ORIGIN)return res.status(403).json({error:'Origem não autorizada'});next()});
 app.use(session({store:new (PgSession(session))({pool,tableName:'user_sessions',createTableIfMissing:true}),name:'triunfo.sid',secret:process.env.SESSION_SECRET,resave:false,saveUninitialized:false,cookie:{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:process.env.NODE_ENV==='production'?'none':'lax',maxAge:604800000}}));
 const authLimit=rateLimit({windowMs:15*60*1000,limit:10,standardHeaders:'draft-7',legacyHeaders:false});
 const safeUser=u=>({id:u.id,username:u.username,role:u.role});
@@ -115,19 +117,31 @@ app.post('/api/orders/:id/receipts',auth,upload.single('receipt'),asyncRoute(asy
  const hash=crypto.createHash('sha256').update(req.file.buffer).digest('hex');
  const filename=crypto.randomUUID()+'.bin',file=path.join(receiptDir,filename);
  await fs.writeFile(file,req.file.buffer,{mode:0o600});
+ const duplicate=await pool.query('SELECT id FROM receipts WHERE sha256=$1',[hash]);
+ if(duplicate.rowCount){await fs.unlink(file);return res.status(409).json({error:'Comprovante já enviado anteriormente'});}
  const receipt=await pool.query('INSERT INTO receipts(order_id,user_id,file_path,original_name,mime_type,sha256) VALUES($1,$2,$3,$4,$5,$6) RETURNING id',[req.params.id,req.user.id,file,req.file.originalname.slice(0,200),req.file.mimetype,hash]);
  let text='',amount=null;
  try{const worker=await createWorker('por');try{const o=await worker.recognize(req.file.buffer);text=o.data.text;amount=amountFromText(text)}finally{await worker.terminate()}}catch(e){console.error('OCR error:',e.message)}
  const total=q.rows[0].total_cents;
  // OCR checks the declared amount only. It does NOT prove the Pix was received.
- const status=amount===null?'manual_review':amount<total?'amount_pending':'amount_matches';
+ const previous=await pool.query('SELECT coalesce(sum(recognized_cents),0)::int AS sum,count(*) FILTER (WHERE recognized_cents IS NULL)::int AS unreadable FROM receipts WHERE order_id=$1 AND id<>$2',[req.params.id,receipt.rows[0].id]);
+ const cumulative=previous.rows[0].sum+(amount||0);
+ const status=amount===null||previous.rows[0].unreadable>0||cumulative>total?'manual_review':cumulative<total?'amount_pending':'amount_matches';
  await pool.query('UPDATE receipts SET recognized_cents=$1,ocr_text=$2,status=$3 WHERE id=$4',[amount,text.slice(0,10000),status,receipt.rows[0].id]);
- await pool.query('UPDATE orders SET recognized_cents=$1,status=$2,updated_at=now() WHERE id=$3',[amount,status,req.params.id]);
- res.status(201).json({receipt_id:receipt.rows[0].id,recognized_cents:amount,total_cents:total,pending_cents:amount===null?null:Math.max(0,total-amount),status,warning:'Valor lido do documento; não confirma recebimento bancário.'});
+ await pool.query('UPDATE orders SET recognized_cents=$1,status=$2,updated_at=now() WHERE id=$3',[cumulative,status,req.params.id]);
+ res.status(201).json({receipt_id:receipt.rows[0].id,recognized_cents:amount,cumulative_cents:cumulative,total_cents:total,pending_cents:amount===null?null:Math.max(0,total-cumulative),status,warning:'Valor lido do documento; não confirma recebimento bancário.'});
+}));
+app.get('/api/admin/orders/:id/receipts',auth,admin,asyncRoute(async(req,res)=>{
+ const q=await pool.query('SELECT id,original_name,mime_type,recognized_cents,status,created_at FROM receipts WHERE order_id=$1 ORDER BY created_at DESC',[req.params.id]);res.json({receipts:q.rows});
+}));
+app.get('/api/receipts/:id/file',auth,asyncRoute(async(req,res)=>{
+ const q=await pool.query('SELECT r.file_path,r.mime_type,r.user_id FROM receipts r WHERE r.id=$1',[req.params.id]);
+ if(!q.rowCount||req.user.role!=='admin'&&q.rows[0].user_id!==req.user.id)return res.sendStatus(404);
+ res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type',q.rows[0].mime_type);res.setHeader('X-Content-Type-Options','nosniff');res.sendFile(q.rows[0].file_path);
 }));
 app.post('/api/admin/orders/:id/confirm',auth,admin,asyncRoute(async(req,res)=>{
- const q=await pool.query("UPDATE orders SET status='confirmed',updated_at=now() WHERE id=$1 AND status IN ('amount_matches','amount_pending','manual_review') RETURNING id",[req.params.id]);
- if(!q.rowCount)return res.status(409).json({error:'Pedido inexistente ou ainda sem comprovante'});
+ const q=await pool.query("UPDATE orders SET status='confirmed',updated_at=now() WHERE id=$1 AND status='amount_matches' RETURNING id",[req.params.id]);
+ if(!q.rowCount)return res.status(409).json({error:'Apenas pedidos com valor exato podem ser confirmados após conferência bancária'});
  await audit(req.user.id,'payment.confirm',req.params.id);res.json({ok:true});
 }));
 app.get('/api/events',auth,(req,res)=>{
