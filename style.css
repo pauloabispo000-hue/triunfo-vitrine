@@ -3,21 +3,22 @@
 
 .opening-art{margin:0 0 24px}.opening-art img{display:block;width:100%;height:auto;border-radius:16px}
 
-/* Uma única arte por tela. Sem fundos duplicados ou camadas sobrepostas. */
+/* Brand assets have legacy inverted names: desktop-v3 is portrait (941x1672),
+   mobile-v3 is landscape (1672x941). Keep the complete artwork visible.
+   Empty space is intentional when the viewport and artwork ratios differ. */
+:root{--brand-art:url("assets/abertura-mobile-v3.jpg");--header-height:112px;--bottom-height:0px}
 body{min-height:100vh;background:#38251c;isolation:isolate}
-body::after{content:none!important;display:none!important}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.8;background:#38251c url("assets/abertura-desktop-v3.jpg?v=single-layer-16") center center/cover no-repeat}
+body::after{content:none;display:none}
+body::before{content:"";position:fixed;top:var(--header-height);right:0;bottom:var(--bottom-height);left:0;z-index:-1;pointer-events:none;opacity:.8;background-image:var(--brand-art);background-position:center;background-size:contain;background-repeat:no-repeat}
 #app{position:relative;z-index:1;min-height:100vh}
 header{z-index:10}
 .modalback{z-index:20}
 .bottom{z-index:10}
 .sectionhead h2,main>h2{background:rgba(247,243,235,.94);padding:10px 16px;border-radius:10px}
 #opening-screen{position:fixed;inset:0;z-index:9999;display:block;overflow:hidden;background:#38251c;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}
-#opening-screen::before,#opening-screen::after{content:none!important;display:none!important}
+#opening-screen::before,#opening-screen::after{content:none;display:none}
 #opening-screen picture{display:block;width:100%;height:100%}
 #opening-screen img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
 #opening-screen.opening-screen-hidden{opacity:0;visibility:hidden;pointer-events:none}
-@media(max-width:650px){
- body::before{background-image:url("assets/abertura-mobile-v3.jpg?v=single-layer-16");background-size:cover}
-}
+@media(max-width:650px){:root{--brand-art:url("assets/abertura-desktop-v3.jpg");--header-height:67px;--bottom-height:58px}}
 @media(prefers-reduced-motion:reduce){#opening-screen{transition:none}}
