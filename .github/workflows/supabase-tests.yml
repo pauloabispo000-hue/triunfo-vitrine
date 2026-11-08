@@ -5,6 +5,10 @@ on:
     paths:
       - 'supabase/**'
       - 'supabase-api.mjs'
+      - 'cloud-*'
+      - 'app.js'
+      - 'index.html'
+      - 'vendor/**'
       - 'tests/**'
       - 'package.json'
       - '.github/workflows/supabase-tests.yml'

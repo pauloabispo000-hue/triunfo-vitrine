@@ -2,14 +2,18 @@
 
 ## Situação em 08/11/2026
 
-A organização Triunfo aparece no plano Free e com **zero projetos**. O formulário
-do projeto triunfo-vitrine está preenchido, mas a senha do banco ainda não foi
-definida e o projeto não foi criado. Portanto, nenhuma tabela, política ou função
-deste pacote foi aplicada ao Supabase hospedado.
+O projeto triunfo-vitrine foi criado: omykabdlwtekyagvxipi, na organização
+Triunfo Free. A migração foi aplicada com sucesso. Verificação hospedada:
+10 tabelas públicas, 10 com RLS, 15 políticas, bucket privado e 6 tabelas na
+publicação Realtime. submit-receipt foi implantada e valida o JWT no handler.
+Site URL e redirect URL foram configurados para o endereço público atual.
+Nenhum usuário existe ainda no Supabase Auth.
 
 O aplicativo público permanece em
 https://pauloabispo000-hue.github.io/triunfo-vitrine/.
-index.html, app.js, style.css e as imagens não foram alterados por este pacote.
+A integração preparada no rascunho altera index.html e app.js para carregar um
+modo conectado desativado por cloud-config.js. CSS e imagens foram preservados.
+Nenhuma alteração deste rascunho foi integrada à main.
 O site ainda usa armazenamento local e não deve ser anunciado como sistema
 centralizado ou de confirmação de pagamentos.
 
@@ -37,7 +41,8 @@ centralizado ou de confirmação de pagamentos.
 - Limite de dez arquivos por pedido e cinquenta por usuário em 24 horas.
 - Camada de transporte supabase-api.mjs para Auth, produtos, votos, sugestões,
   carrinho, pedidos, arquivos privados, operações administrativas e Realtime.
-  **Ainda não conectada à interface existente.**
+  A interface está preparada em cloud-entry.mjs, com ativação desabilitada até
+  os testes hospedados e o cadastro administrativo.
 
 ## Inspeção e incompatibilidades do backend anterior
 
@@ -116,7 +121,8 @@ confirmação explícita da conferência bancária via triunfo_confirm_payment.
 ## Validação executada e pendente
 
 Testes executados com PostgreSQL/WASM PGlite e schemas Auth/Storage simulados,
-mais testes do handler com clientes de serviço simulados. São verificações
+mais testes do handler e da interface com clientes de serviço simulados.
+Total local atual: 19 testes de banco, 6 do handler e 5 da interface (30). São verificações
 locais; não são testes dos serviços hospedados.
 
 Cobertura local: RLS, isolamento, impedimento de autopromoção, voto único,
@@ -125,8 +131,12 @@ insuficiente, cancelamento único, restrição de arquivos, SHA-256, duplicaçã
 valor inferior, complemento exato, leitura nula, excedente e confirmação
 administrativa auditada.
 
+Verificações reais executadas por HTTP: consulta anônima de produtos respondeu
+200; leitura anônima de pedidos foi bloqueada com 401/permissão negada; upload
+sem sessão respondeu 401 pelo handler implantado.
+
 Pendente no ambiente real: cadastro/login de duas contas, envio de e-mail,
-promoção do titular, Storage real, deploy Deno, Realtime entre dispositivos,
+promoção do titular, upload/download no Storage, Realtime entre dispositivos,
 concorrência entre conexões reais, OCR em documentos, interface completa e
 ativação pública.
 
@@ -151,7 +161,12 @@ definir retenção e exportação privada antes do uso comercial.
 
 ## Reversão
 
-Este pacote adiciona arquivos e não ativa a integração no site. Sua reversão
+Este pacote prepara arquivos e não ativa a integração no site. Sua reversão
 no GitHub não exige apagar dados. Após a aplicação do banco, manter as tabelas
 e desativar apenas a integração em caso de problema; qualquer exclusão de dados
 dependerá de autorização explícita e cópia privada.
+
+A migração complementar 202611080002_image_safety.sql restringe URLs de imagens,
+impede injeção de atributos e adiciona perfis/sugestões ao Realtime.
+A interface assina eventos permitidos por RLS e reconcilia o catálogo visível
+a cada 60 segundos para detectar itens movidos a classificações privadas.

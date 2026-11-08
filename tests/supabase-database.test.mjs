@@ -18,6 +18,7 @@ await db.exec(`
  grant select on storage.objects to anon,authenticated;
 `);
 await db.exec(await readFile(new URL('../supabase/migrations/202611080001_triunfo.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations/202611080002_image_safety.sql',import.meta.url),'utf8'));
 const uid = ['10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003'];
 const product='20000000-0000-4000-8000-000000000001';
 const voting='20000000-0000-4000-8000-000000000002';
@@ -147,6 +148,12 @@ await test('transaction identifier cannot be reused for a different receipt',asy
  const nextReceipt=await scalar("select id from public.triunfo_receipts where sha256=repeat('c',64)");
  await db.query('update public.triunfo_receipts set transaction_id=$1 where id=$2',['E12345678901234567890123456789012',rid[0]]);
  await assert.rejects(db.query('select public.triunfo_record_receipt_reading($1,1200,$2,$3)',[nextReceipt,'texto','E12345678901234567890123456789012']),/duplicate key/);
+});
+await test('stored images reject attribute injection and unsafe data URLs',async()=>{
+ for(const image of ['" onerror="alert(1)','javascript:alert(1)','data:image/svg+xml,<svg>']){
+  await assert.rejects(asUser(0,()=>db.query('insert into public.triunfo_suggestions(name,image) values($1,$2)',['Teste',image])),/check constraint/);
+ }
+ await asUser(0,()=>db.query('insert into public.triunfo_suggestions(name,image) values($1,$2)',['Teste','data:image/png;base64,aGVsbG8=']));
 });
 console.log(passed+' database checks passed. Hosted Auth, Storage and Realtime remain untested.');
 await db.close();

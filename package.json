@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "check": "node --check server.js",
-    "test:supabase": "node tests/supabase-database.test.mjs && node --test tests/receipt-handler.test.mjs"
+    "test:supabase": "node tests/supabase-database.test.mjs && node --test tests/receipt-handler.test.mjs && node --test tests/cloud-interface.test.mjs",
+    "build:supabase": "esbuild vendor/entry.mjs --bundle --format=esm --platform=browser --minify --outfile=vendor/supabase.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -26,6 +27,9 @@
     "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.15"
+    "@electric-sql/pglite": "0.5.15",
+    "jsdom": "26.1.0",
+    "esbuild": "0.25.12",
+    "@supabase/supabase-js": "2.119.0"
   }
 }

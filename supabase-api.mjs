@@ -45,7 +45,7 @@ export function createTriunfoAPI(client) {
   // Update/insert may return no rows for an unauthorized user; single forces an error.
   saveProduct(product){
    const fields={name:product.name,price_cents:product.price_cents,
-    status:product.status,stock:product.stock,image:product.image,emoji:product.emoji||'🍰'};
+    status:product.status,stock:product.stock,image:product.image,emoji:product.emoji};
    for(const key of Object.keys(fields))if(fields[key]===undefined)delete fields[key];
    return unwrap((product.id?table('products').update(fields).eq('id',product.id):
     table('products').insert(fields)).select().single());
@@ -94,7 +94,7 @@ export function createTriunfoAPI(client) {
   },
   subscribe(onChange,onStatus=()=>{}){
    const channel=client.channel('triunfo-store-'+crypto.randomUUID());
-   for(const name of ['products','orders','settings','cart_items']){
+   for(const name of ['products','orders','settings','cart_items','profiles','suggestions']){
     channel.on('postgres_changes',{event:'*',schema:'public',table:'triunfo_'+name},onChange);
    }
    channel.subscribe(onStatus);
