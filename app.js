@@ -69,8 +69,10 @@ function settingsSave(e){e.preventDefault();let f=new FormData(e.target);db.sett
 function restoreSession(){try{const cached=JSON.parse(sessionStorage.getItem('triunfo-demo-user'));const account=db.users.find(u=>u.id===cached?.id);user=account&&account.username===cached.username?{id:account.id,username:account.username,role:account.role}:null}catch{user=null}render()}
 restoreSession();
 const headerSizeObserver=new ResizeObserver(entries=>{
-  const header=entries[0]?.target;
-  if(header)document.documentElement.style.setProperty('--header-height',header.getBoundingClientRect().height+'px');
+  for(const entry of entries){
+    const property=entry.target.matches('header')?'--header-height':'--bottom-height';
+    document.documentElement.style.setProperty(property,entry.target.getBoundingClientRect().height+'px');
+  }
 });
 function trackHeaderHeight(){
   headerSizeObserver.disconnect();
@@ -78,6 +80,11 @@ function trackHeaderHeight(){
   if(header){
     document.documentElement.style.setProperty('--header-height',header.getBoundingClientRect().height+'px');
     headerSizeObserver.observe(header);
+  }
+  const bottom=document.querySelector('#app>.bottom');
+  if(bottom){
+    document.documentElement.style.setProperty('--bottom-height',bottom.getBoundingClientRect().height+'px');
+    headerSizeObserver.observe(bottom);
   }
 }
 new MutationObserver(trackHeaderHeight).observe(document.querySelector('#app'),{childList:true});
