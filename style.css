@@ -12,13 +12,11 @@ main>h2{background:rgba(247,243,235,.94);padding:12px 16px;border-radius:10px}
 
 body::before{top:var(--header-height,112px);bottom:0;background-position:center top}
 
-/* Tela de abertura: imagem integral, opaca, por cinco segundos. */
-#opening-screen{position:fixed;inset:0;z-index:9999;width:100%;height:100dvh;background:#38251c;display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}
-#opening-screen img{position:relative;z-index:1;display:block;width:auto;height:auto;max-width:94vw;max-height:92dvh;object-fit:contain;object-position:center center;opacity:1;flex:0 1 auto}
+/* Abertura responsiva: arquivos enviados, na ordem solicitada. */
+#opening-screen{--opening-image:url("assets/abertura-desktop-v3.jpg");position:fixed;inset:0;z-index:9999;width:100%;height:100dvh;background:#38251c;display:grid;place-items:center;overflow:hidden;opacity:1;visibility:visible;transition:opacity .35s ease,visibility .35s ease}
+#opening-screen::before{content:"";position:absolute;inset:-40px;background:var(--opening-image) center/cover no-repeat;filter:blur(32px) brightness(.65);pointer-events:none}
+#opening-screen picture{position:relative;display:block;width:100%;height:100%}
+#opening-screen img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;opacity:1}
 #opening-screen.opening-screen-hidden{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:650px){#opening-screen{--opening-image:url("assets/abertura-mobile-v3.jpg")}}
 @media(prefers-reduced-motion:reduce){#opening-screen{transition:none}}
-
-@media(max-width:600px){#opening-screen img{max-width:82vw;max-height:72dvh}}
-
-/* Preenche as áreas vazias sem ampliar nem cortar o logotipo central. */
-#opening-screen::before{content:"";position:absolute;inset:-40px;background:#38251c url('assets/abertura-triunfo.jpg') center center/cover no-repeat;filter:blur(32px) brightness(.65);transform:scale(1.04);pointer-events:none}
