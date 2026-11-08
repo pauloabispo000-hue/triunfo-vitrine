@@ -134,13 +134,26 @@ export async function startCloud(client) {
     </div></div>`;
   }).join('')||'Nenhum pedido.')+'</div>';
  };
- window.cancelCloudOrder=attempt(async(id)=>{
-  if(!confirm('Cancelar o pedido e devolver os itens ao estoque?'))return;
-  await api.cancelOrder(id);await refresh();
+ window.cancelCloudOrder=function(id){
+  closeModal();modal(`<h2>Cancelar pedido?</h2><p>Os itens deste pedido serão devolvidos ao estoque.</p>
+   <div class="actions"><button class="btn secondary" onclick="closeModal()">Voltar</button>
+   <button class="btn" onclick="applyCloudCancellation('${id}')">Confirmar cancelamento</button></div>`);
+ };
+ window.applyCloudCancellation=attempt(async(id)=>{
+  await api.cancelOrder(id);closeModal();await refresh();
  });
- window.confirmCloudPayment=attempt(async(id)=>{
-  if(!confirm('Você conferiu na conta bancária e confirmou o recebimento do valor exato deste pedido?'))return;
-  await api.confirmPayment(id,true);await refresh();
+ window.confirmCloudPayment=function(id){
+  if(!admin())return;
+  closeModal();modal(`<h2>Confirmar recebimento bancário</h2>
+   <p>A compatibilidade do comprovante não confirma o crédito na conta.</p>
+   <form onsubmit="applyCloudBankConfirmation(event,'${id}')">
+   <label><input type="checkbox" name="bankChecked" required> Conferi o recebimento do valor exato na conta bancária.</label>
+   <div class="actions"><button type="button" class="btn secondary" onclick="closeModal()">Voltar</button>
+   <button class="btn" type="submit">Confirmar recebimento</button></div></form>`);
+ };
+ window.applyCloudBankConfirmation=attempt(async(e,id)=>{
+  e.preventDefault();if(!admin()||new FormData(e.target).get('bankChecked')!=='on')return;
+  await api.confirmPayment(id,true);closeModal();await refresh();
  });
  let receiptURLs=[];
  const oldClose=closeModal;
@@ -190,9 +203,14 @@ export async function startCloud(client) {
  });
  statusSet=attempt(async(id,status)=>{if(!admin())return;await api.saveProduct({id,status});await refresh()});
  duplicateProduct=attempt(async(id)=>{if(!admin())return;await api.duplicateProduct(id);await refresh()});
- deleteProduct=attempt(async(id)=>{
-  if(!admin()||!confirm('Arquivar este produto e preservar seu histórico?'))return;
-  await api.archiveProduct(id);await refresh();
+ deleteProduct=function(id){
+  if(!admin())return;
+  closeModal();modal(`<h2>Arquivar produto?</h2><p>O histórico será preservado.</p>
+   <div class="actions"><button class="btn secondary" onclick="closeModal()">Voltar</button>
+   <button class="btn" onclick="applyCloudArchive('${id}')">Arquivar produto</button></div>`);
+ };
+ window.applyCloudArchive=attempt(async(id)=>{
+  if(!admin())return;await api.archiveProduct(id);closeModal();await refresh();
  });
  review=attempt(async(id,accepted)=>{if(!admin())return;await api.reviewSuggestion(id,Boolean(accepted));await refresh()});
  settingsSave=attempt(async(e)=>{

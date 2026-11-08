@@ -124,3 +124,12 @@ test('overlapping refresh calls wait for reconciled state instead of returning s
   assert.equal(reads,2);
  }finally{m.close()}
 });
+test('cancellation requires an in-page confirmation before calling the server',async()=>{
+ const m=await mount();try{
+  m.w.cancelCloudOrder(oid);
+  assert.ok(m.w.document.querySelector('#modal'));
+  assert.equal(m.client.calls.filter(c=>c.rpc==='triunfo_cancel_order').length,0);
+  await m.w.applyCloudCancellation(oid);
+  assert.equal(m.client.calls.filter(c=>c.rpc==='triunfo_cancel_order').length,1);
+ }finally{m.close()}
+});
