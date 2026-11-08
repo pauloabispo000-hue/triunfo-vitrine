@@ -3,12 +3,13 @@ import { createTriunfoAPI } from './supabase-api.mjs';
 export async function startCloud(client) {
  const api=createTriunfoAPI(client);
  let syncGeneration=0,refreshTimer,subscription,checkoutRequest=null;
+ let refreshFlight=null,refreshRequested=false;
  const message=error=>error?.message||'Não foi possível concluir. Tente novamente.';
  const attempt=fn=>async(...args)=>{
   try{return await fn(...args)}catch(error){alert(message(error))}
  };
- async function refresh(){
-  const generation=++syncGeneration;
+ async function readState(){
+  const generation=syncGeneration;
   const {data:{session}}=await client.auth.getSession();
   let account=null;
   if(session)account=await api.account();
@@ -21,6 +22,15 @@ export async function startCloud(client) {
   db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.user_id})),
    cart:cart.map(i=>({id:i.product_id,qty:i.qty})),orders,users:[],votes:{}};
   render();
+ }
+ function refresh(){
+  refreshRequested=true;
+  if(!refreshFlight){
+   refreshFlight=(async()=>{
+    do{refreshRequested=false;await readState()}while(refreshRequested);
+   })().finally(()=>{refreshFlight=null});
+  }
+  return refreshFlight;
  }
  function scheduleRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh().catch(error=>console.warn(message(error))),300)}
  auth=function(mode){
@@ -167,6 +177,12 @@ export async function startCloud(client) {
   await api.saveProduct({id:pid,name:String(f.get('name')).trim(),price_cents:Math.round(Number(f.get('price'))*100),status:f.get('status'),image});
   closeModal();await refresh();
  });
+ const localCountStock=countStock;
+ countStock=function(pid){
+  localCountStock(pid);
+  const notice=document.querySelector('#modal p.tiny');
+  if(notice)notice.textContent='Informe o total disponível agora. O estoque é reservado na criação do pedido e devolvido quando ele é cancelado.';
+ };
  saveStock=attempt(async(e,pid)=>{
   e.preventDefault();if(!admin())return;const stock=Number(new FormData(e.target).get('stock'));
   if(!Number.isSafeInteger(stock)||stock<0||stock>1000000)throw Error('Quantidade inválida.');
@@ -186,7 +202,7 @@ export async function startCloud(client) {
  const oldAdminContent=adminContent;
  adminContent=function(){
   const html=oldAdminContent();
-  if(adminTab==='settings')return html.replace(/<p class="tiny">Votos mínimos[\s\S]*?<\/p>/,'');
+  if(adminTab==='settings')return html.replace(/<p class="tiny">Votos mínimos[\s\S]*?<\/p>/,'').replace(/(<input[^>]*name="pix"[^>]*) required/g,'$1');
   return html;
  };
  // Fetch current state after reconnect/focus; do not cache private domain data locally.

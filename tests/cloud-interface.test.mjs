@@ -103,3 +103,24 @@ test('signout removes private in-memory orders and never falls back to local adm
   assert.equal(m.w.eval('admin()'),false);
  }finally{m.close()}
 });
+test('overlapping refresh calls wait for reconciled state instead of returning stale orders',async()=>{
+ const m=await mount();try{
+  const order=m.client.rows.orders[0];
+  m.client.rows.orders=[];await m.running.refresh();
+  m.client.rows.orders=[order];
+  const originalFrom=m.client.from;let reads=0;
+  m.client.from=name=>{
+   const q=originalFrom(name);
+   if(name==='triunfo_orders'){
+    const number=++reads,originalThen=q.then;
+    q.then=(resolve,reject)=>new Promise(r=>setTimeout(r,number===2?30:0)).then(()=>originalThen.call(q,resolve,reject));
+   }
+   return q;
+  };
+  const first=m.running.refresh(),second=m.running.refresh();
+  await first;
+  assert.equal(m.w.eval('db.orders.length'),1);
+  await second;
+  assert.equal(reads,2);
+ }finally{m.close()}
+});

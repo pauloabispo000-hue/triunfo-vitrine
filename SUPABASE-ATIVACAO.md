@@ -181,3 +181,19 @@ pagamentos. index.html continua com enabled=false. O catálogo compartilhado
 ainda está vazio; produtos locais não foram importados automaticamente.
 O login do titular deve ser feito diretamente no navegador, sem enviar senha
 no chat, antes de testar as ações administrativas.
+
+## Verificações hospedadas após login do titular
+
+Login administrativo confirmado pela interface. Cadastro e edição de um produto
+fictício, atualização do estoque de 0 para 3 e sincronização em uma segunda aba
+funcionaram. Um pedido fictício de R$ 1,25 foi criado pelo servidor e reservou uma
+unidade, reduzindo o estoque para 2. Nenhum pagamento foi realizado.
+
+A execução encontrou uma corrida entre respostas de atualização concorrentes:
+o checkout podia tentar mostrar o pedido antes da atualização aplicada. A fila
+de reconciliação foi corrigida e ganhou um teste de regressão. Agora são 31
+testes locais (19 do banco, 6 do handler e 6 da interface).
+
+O teste de upload foi interrompido: o Chrome não manteve o arquivo selecionado.
+É necessário habilitar Allow access to file URLs na extensão do ChatGPT antes
+de repetir o fluxo automatizado. Não houve comprovante enviado nessa tentativa.
