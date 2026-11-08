@@ -22,3 +22,25 @@ header{z-index:10}
 #opening-screen.opening-screen-hidden{opacity:0;visibility:hidden;pointer-events:none}
 @media(max-width:650px){:root{--brand-art:url("assets/abertura-desktop-v3.jpg");--art-height:177.683315622vw;--header-height:67px;--bottom-height:58px}}
 @media(prefers-reduced-motion:reduce){#opening-screen{transition:none}}
+
+/* Keep product lists inside the full-width artwork, including large catalogs. */
+main:has(.grid){max-height:var(--art-height);overflow-y:auto;overscroll-behavior-y:contain;padding:12px 16px 20px;scrollbar-gutter:stable}
+.grid{grid-template-columns:repeat(auto-fill,minmax(150px,180px));gap:10px;align-items:start}
+.product{min-width:0;border-radius:11px}
+.product .photo{height:76px;font-size:42px}
+.product .content{padding:9px;font-size:14px;overflow-wrap:anywhere}
+.product .muted{font-size:12px}
+.product .price{font-size:19px;margin:6px 0}
+.product .actions{gap:5px}
+.product .btn{padding:8px 9px;font-size:13px;min-height:36px}
+.sectionhead{margin:12px 0 8px}
+.sectionhead:first-child{margin-top:0}
+.sectionhead h2{font-size:17px;padding:7px 12px}
+@media(max-width:650px){
+ main:has(.grid){padding:10px 10px calc(12px + var(--bottom-height))}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .product .photo{height:72px;font-size:38px}
+ .product .content{padding:8px}
+ .product .actions{flex-direction:row;flex-wrap:wrap}
+ .product .actions .btn{flex:1 1 auto}
+}
