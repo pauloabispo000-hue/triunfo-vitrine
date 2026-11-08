@@ -197,3 +197,15 @@ testes locais (19 do banco, 6 do handler e 6 da interface).
 O teste de upload foi interrompido: o Chrome não manteve o arquivo selecionado.
 É necessário habilitar Allow access to file URLs na extensão do ChatGPT antes
 de repetir o fluxo automatizado. Não houve comprovante enviado nessa tentativa.
+
+## Resultado final desta rodada de validação
+
+A correção do checkout foi repetida na página hospedada: o pedido foi criado
+e a tela Pix abriu corretamente. Dois pedidos fictícios foram cancelados pela
+interface; o estoque retornou de 1 para 3. Duplicação funcionou e os dois
+produtos de teste foram arquivados. A indicação Pix temporária foi removida.
+A confirmação nativa de cancelamento foi substituída por confirmação dentro
+da página; a confirmação bancária exige uma caixa explícita de conferência.
+Agora são 32 testes locais aprovados (19 banco, 6 handler, 7 interface).
+Upload autenticado, OCR, teste com outra conta e dois dispositivos seguem
+pendentes. A loja principal permanece no modo local.
