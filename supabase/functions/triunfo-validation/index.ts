@@ -50,7 +50,7 @@ Deno.serve(async(req:Request)=>{
   check('Bucket permanece privado',!bucketError&&bucketInfo.public===false);
   const accounts:any[]=[];
   for(const suffix of ['a','b']){
-   const email='triunfo-test-'+run+'-'+suffix+'@example.invalid',password=crypto.randomUUID()+crypto.randomUUID()+'Aa!';
+   const email='triunfo-test-'+run+'-'+suffix+'@example.invalid',password=(crypto.randomUUID()+crypto.randomUUID()).replaceAll('-','')+'Aa!';
    const created=await unwrap(service.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{triunfo_validation_run:run,display_name:'Teste '+suffix}}));
    const c=client();const login=await unwrap(c.auth.signInWithPassword({email,password}));
    accounts.push({id:created.user.id,c,token:login.session.access_token});

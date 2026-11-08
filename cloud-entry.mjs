@@ -1,6 +1,6 @@
 import { createTriunfoAPI } from './supabase-api.mjs';
 import { attachValidationTools } from './validation-tools.mjs';
-import { recognizeReceipt } from './receipt-ocr.mjs';
+import { recognizeReceipt } from './receipt-ocr.mjs?v=2';
 
 export async function startCloud(client) {
  const api=createTriunfoAPI(client);

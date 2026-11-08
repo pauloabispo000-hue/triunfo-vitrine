@@ -11,7 +11,8 @@ export async function recognizeReceipt(blob,onProgress=()=>{}){
  const bitmap=await createImageBitmap(blob);
  const pixels=bitmap.width*bitmap.height;bitmap.close();
  if(pixels>12000000)throw Error('Imagem muito grande. Use até 12 megapixels.');
- const {createWorker}=await import('./assets/ocr/tesseract.esm.min.js');
+ const module=await import('./assets/ocr/tesseract.esm.min.js');
+ const {createWorker}=module.default||module;
  const base=new URL('./assets/ocr/',import.meta.url);
  const worker=await createWorker('por',1,{
   workerPath:new URL('worker.min.js',base).href,
