@@ -7,13 +7,16 @@ Triunfo Free. A migração foi aplicada com sucesso. Verificação hospedada:
 10 tabelas públicas, 10 com RLS, 15 políticas, bucket privado e 6 tabelas na
 publicação Realtime. submit-receipt foi implantada e valida o JWT no handler.
 Site URL e redirect URL foram configurados para o endereço público atual.
-Nenhum usuário existe ainda no Supabase Auth.
+A conta do titular foi cadastrada e recebeu administração após autorização
+explícita. A concessão foi registrada em triunfo_audit_events. Login real pela
+interface ainda precisa ser validado.
 
 O aplicativo público permanece em
 https://pauloabispo000-hue.github.io/triunfo-vitrine/.
 A integração preparada no rascunho altera index.html e app.js para carregar um
 modo conectado desativado por cloud-config.js. CSS e imagens foram preservados.
-Nenhuma alteração deste rascunho foi integrada à main.
+A main pode receber a preparação com enabled=false e a página validacao.html
+para validar a conexão sem ativar o modo conectado na loja principal.
 O site ainda usa armazenamento local e não deve ser anunciado como sistema
 centralizado ou de confirmação de pagamentos.
 
@@ -170,3 +173,11 @@ A migração complementar 202611080002_image_safety.sql restringe URLs de imagen
 impede injeção de atributos e adiciona perfis/sugestões ao Realtime.
 A interface assina eventos permitidos por RLS e reconcilia o catálogo visível
 a cada 60 segundos para detectar itens movidos a classificações privadas.
+
+## Página de validação
+
+validacao.html habilita a conexão somente nessa página e orienta a não efetuar
+pagamentos. index.html continua com enabled=false. O catálogo compartilhado
+ainda está vazio; produtos locais não foram importados automaticamente.
+O login do titular deve ser feito diretamente no navegador, sem enviar senha
+no chat, antes de testar as ações administrativas.
