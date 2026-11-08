@@ -87,3 +87,12 @@ body::before,body::after{pointer-events:none!important}
     opacity:.8;z-index:-1;pointer-events:none;
   }
 }
+
+/* Correção definitiva: mobile usa arte vertical; desktop usa arte horizontal. */
+@media(max-width:650px){
+ body::before{background-image:url("assets/abertura-mobile-v3.jpg")!important;background-size:contain!important;background-position:center center!important;}
+ body::after{background-image:url("assets/abertura-mobile-v3.jpg")!important;}
+}
+@media(min-width:651px){
+ body::before,body::after{background-image:url("assets/abertura-desktop-v3.jpg")!important;}
+}
