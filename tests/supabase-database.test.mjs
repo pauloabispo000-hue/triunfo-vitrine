@@ -20,6 +20,7 @@ await db.exec(`
 await db.exec(await readFile(new URL('../supabase/migrations/202611080001_triunfo.sql',import.meta.url),'utf8'));
 await db.exec(await readFile(new URL('../supabase/migrations/202611080002_image_safety.sql',import.meta.url),'utf8'));
 await db.exec(await readFile(new URL('../supabase/migrations/202611080003_validation_cleanup.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../supabase/migrations/202611090001_admin_participants.sql',import.meta.url),'utf8'));
 const uid = ['10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003'];
 const product='20000000-0000-4000-8000-000000000001';
 const voting='20000000-0000-4000-8000-000000000002';
@@ -59,6 +60,15 @@ await test('voting unique per user; clients cannot change votes',async()=>{
  const totals=await asUser(null,()=>db.query('select * from public.triunfo_vote_totals()'),'anon');
  assert.equal(Number(totals.rows[0].no),2);
  await assert.rejects(asUser(0,()=>db.query('delete from public.triunfo_votes')),/permission denied/);
+});
+await test('only administrators can resolve participant names and Google names are used for generic profiles',async()=>{
+ const query=()=>db.query('select * from public.triunfo_participant_names($1::uuid[]) order by id',[uid]);
+ await db.query("update public.triunfo_profiles set display_name='Cliente' where id=$1",[uid[0]]);
+ await db.query("update auth.users set raw_user_meta_data=raw_user_meta_data || $2::jsonb where id=$1",[uid[0],JSON.stringify({full_name:'Pessoa Teste'})]);
+ const result=await asUser(2,query);
+ assert.deepEqual(result.rows,[{id:uid[0],display_name:'Pessoa Teste'},{id:uid[1],display_name:'Teste 1'}]);
+ await assert.rejects(asUser(0,query),/restrita à administração/);
+ await assert.rejects(asUser(null,query,'anon'),/permission denied/);
 });
 await test('server prices, duplicate items consolidated, idempotent checkout',async()=>{
  const req='30000000-0000-4000-8000-000000000001';

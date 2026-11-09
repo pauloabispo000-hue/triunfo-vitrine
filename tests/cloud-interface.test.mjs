@@ -16,12 +16,13 @@ function mockClient({isAdmin=false,signedIn=true}={}){
   products:[{id:pid,name:'Mousse',price_cents:1200,status:'available',stock:10,image:null,emoji:'🍮'}],
   settings:{store:'Triunfo',pix:'teste-chave'},
   suggestions:[],cart_items:[{product_id:pid,qty:2}],
+  votes:[],
   orders:[{id:oid,total_cents:2400,recognized_cents:2400,status:'amount_matches',triunfo_order_items:[{name:'Mousse',qty:2}]}]
  };
  function from(name){
   const key=name.replace('triunfo_','');let payload,mutation=false;
   const q={
-   select(){return this},eq(){return this},order(){return this},limit(){return this},single(){return this},
+   select(){return this},eq(){return this},order(){return this},limit(){return this},range(){return this},single(){return this},
    update(value){payload=value;mutation=true;return this},insert(value){payload=value;mutation=true;return this},
    upsert(value){payload=value;mutation=true;return this},delete(){mutation=true;return this},
    then(resolve,reject){if(mutation)calls.push({table:name,payload});return Promise.resolve({data:mutation?{id:pid}:rows[key],error:null}).then(resolve,reject)}
@@ -38,7 +39,7 @@ function mockClient({isAdmin=false,signedIn=true}={}){
    async updateUser(){calls.push({passwordChanged:true});return {error:null}},
    async signOut(){signedIn=false;return {error:null}}
   },
-  from,async rpc(name,args){calls.push({rpc:name,args});return {data:name==='triunfo_is_admin'?isAdmin:name==='triunfo_vote_totals'?[]:name==='triunfo_create_order'?oid:null,error:null}},
+  from,async rpc(name,args){calls.push({rpc:name,args});return {data:name==='triunfo_is_admin'?isAdmin:name==='triunfo_participant_names'?[{id:'cliente-b',display_name:'Pessoa Teste'}]:name==='triunfo_vote_totals'?[]:name==='triunfo_create_order'?oid:null,error:null}},
   channel(){return {on(){return this},subscribe(){return this}}},
   removeChannel(){},
   functions:{async invoke(){return {data:{status:'under_review'}}}}
@@ -73,6 +74,23 @@ test('cloud mode ignores cached local administrator and renders server catalog',
   assert.doesNotMatch(m.w.document.querySelector('#app').textContent,/Administração/);
   m.w.auth('login');
   assert.ok(m.w.document.querySelector('input[type=email]'));
+ }finally{m.close()}
+});
+test('administrator sees the author before reviewing a suggestion and can inspect individual votes',async()=>{
+ const m=await mount({isAdmin:true});
+ try{
+  m.client.rows.suggestions=[{id:'suggestion-1',name:'Trufa sugerida',status:'pending',user_id:'cliente-b'}];
+  m.client.rows.votes=[{user_id:'cliente-b',favorable:false}];
+  await m.running.refresh();
+  m.w.eval("adminTab='suggestions';nav('admin')");
+  assert.match(m.w.document.querySelector('main').textContent,/Enviada por Pessoa Teste/);
+  assert.match(m.w.document.querySelector('main').textContent,/Aprovar/);
+  m.w.eval("adminTab='products';render()");
+  const button=m.w.document.querySelector('button[data-product]');
+  await m.w.showProductVotes(button);
+  const details=m.w.document.querySelector('[data-voter-list]').textContent;
+  assert.match(details,/Pessoa Teste.*Contrário/);
+  assert.match(details,/cliente-b/);
  }finally{m.close()}
 });
 test('refresh after the photo picker preserves the suggestion form and submits the attachment',async()=>{

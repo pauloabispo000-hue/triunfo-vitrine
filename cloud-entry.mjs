@@ -1,4 +1,4 @@
-import { createTriunfoAPI } from './supabase-api.mjs?v=google-auth-1';
+import { createTriunfoAPI } from './supabase-api.mjs?v=participacao-1';
 import { recognizeReceipt } from './receipt-ocr.mjs?v=2';
 
 export async function startCloud(client) {
@@ -20,17 +20,18 @@ export async function startCloud(client) {
   let account=null;
   if(session)account=await api.account();
   const [products,settings,suggestions,cart,orders]=await Promise.all([
-   api.products(),api.settings(),account?api.suggestions():[],
+   api.products(),api.settings(),account?api.suggestions(account.role==='admin'):[],
    account?api.cart():[],account?api.orders():[]
   ]);
   if(generation!==syncGeneration)return;
   // Returning from the native file picker can trigger a background refresh.
   // Replacing the suggestion form would discard the selected File.
   const nextRole=account?.role;
+  if((nextRole!=='admin'||user?.id!==account?.id)&&document.querySelector('[data-voter-list]'))closeModal();
   const keepSuggestionForm=page==='suggest'&&account&&user?.id===account.id&&
    user.role===nextRole&&document.querySelector('#app input[type="file"][name="photo"]');
   user=account?{id:account.id,username:account.display_name,role:account.role,photo:account.photo}:null;
-  db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.user_id})),
+  db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.author})),
    cart:cart.map(i=>({id:i.product_id,qty:i.qty})),orders,users:[],votes:{}};
   if(!keepSuggestionForm)render();
  }
@@ -278,12 +279,51 @@ export async function startCloud(client) {
   if(!admin())return;await api.archiveProduct(id);closeModal();await refresh();
  });
  review=attempt(async(id,accepted)=>{if(!admin())return;await api.reviewSuggestion(id,Boolean(accepted));await refresh()});
+ function participantDetails(row){
+  const date=row.created_at?new Date(row.created_at).toLocaleString('pt-BR'):'';
+  return `<div class="tiny">Conta: ${esc(row.user_id)}${date?' · '+esc(date):''}</div>`;
+ }
+ const originalProductCard=adminProductCard;
+ adminProductCard=function(product){
+  const card=originalProductCard(product);
+  if(!admin())return card;
+  return card.replace(/<\/article>$/,`<div class="actions"><button class="btn secondary" data-product="${esc(product.id)}" onclick="showProductVotes(this)">Ver votantes</button></div></article>`);
+ };
+ window.showProductVotes=attempt(async(button)=>{
+  if(!admin()||button.disabled)return;
+  const accountId=user.id,productId=button.dataset.product,offset=Number(button.dataset.offset||0);
+  const product=db.products.find(item=>item.id===productId);
+  if(!product)return;
+  button.disabled=true;
+  try{
+   const {votes,hasMore}=await api.productVotes(productId,offset);
+   if(!admin()||user.id!==accountId||!button.isConnected)return;
+   closeModal();modal(`<section data-voter-list><h2>Votantes · ${esc(product.name)}</h2>
+    ${votes.map(v=>`<div class="line"><strong>${esc(v.author)}</strong> · ${v.favorable?'Favorável':'Contrário'}${participantDetails(v)}</div>`).join('')||'<p>Nenhum voto registrado.</p>'}
+    <div class="actions">
+    ${offset>0?`<button class="btn secondary" data-product="${esc(productId)}" data-offset="${offset-50}" onclick="showProductVotes(this)">Anterior</button>`:''}
+    ${hasMore?`<button class="btn secondary" data-product="${esc(productId)}" data-offset="${offset+50}" onclick="showProductVotes(this)">Próxima</button>`:''}
+    </div></section>`);
+  }finally{button.disabled=false}
+ });
  settingsSave=attempt(async(e)=>{
   e.preventDefault();if(!admin())return;const f=new FormData(e.target);
   await api.saveSettings(String(f.get('store')).trim(),String(f.get('pix')).trim());await refresh();
  });
  const oldAdminContent=adminContent;
  adminContent=function(){
+  if(admin()&&adminTab==='suggestions'){
+   const pending=db.suggestions.filter(s=>s.status==='pending');
+   return `<div class="panel">${pending.map(s=>`<div class="line">
+    ${s.image?`<img class="preview" src="${esc(s.image)}" alt="Foto da sugestão">`:''}
+    <strong>${esc(s.name)}</strong>
+    <div>Enviada por <strong>${esc(s.author)}</strong></div>
+    ${participantDetails(s)}
+    <div class="actions">
+    <button class="btn" onclick="review('${s.id}',true)">Aprovar</button>
+    <button class="btn secondary" onclick="review('${s.id}',false)">Recusar</button>
+    </div></div>`).join('')||'Sem sugestões pendentes'}</div>`;
+  }
   const html=oldAdminContent();
   if(adminTab==='settings')return html.replace(/<p class="tiny">Votos mínimos[\s\S]*?<\/p>/,'').replace(/(<input[^>]*name="pix"[^>]*) required/g,'$1');
   if(adminTab==='products')return html.replace('<select name="status">','<select name="status"><option value="archived">Arquivado (rascunho)</option>');
@@ -296,7 +336,7 @@ export async function startCloud(client) {
    recoveryUserId=session.user.id;
    setTimeout(()=>{if(recoveryUserId===session.user.id)showPasswordReset()},0);
   }
-  if(event==='SIGNED_OUT'){++syncGeneration;user=null;db.orders=[];db.cart=[];db.suggestions=[];render()}
+  if(event==='SIGNED_OUT'){++syncGeneration;user=null;db.orders=[];db.cart=[];db.suggestions=[];if(document.querySelector('[data-voter-list]'))closeModal();render()}
   setTimeout(()=>refresh().catch(error=>console.warn(message(error))),0)
  });
  subscription=api.subscribe(scheduleRefresh,status=>{if(status==='SUBSCRIBED')scheduleRefresh()});

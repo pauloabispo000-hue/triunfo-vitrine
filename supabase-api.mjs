@@ -12,6 +12,15 @@ export function createTriunfoAPI(client, { redirectTo='https://pauloabispo000-hu
   if(error||!data.user)throw Error('Entre para continuar');
   return data.user.id;
  }
+ async function withAuthors(rows){
+  const ids=[...new Set(rows.map(row=>row.user_id))];
+  const names=new Map();
+  for(let offset=0;offset<ids.length;offset+=100){
+   const profiles=await rpc('participant_names',{p_ids:ids.slice(offset,offset+100)});
+   for(const profile of profiles)names.set(profile.id,profile.display_name);
+  }
+  return rows.map(row=>({...row,author:names.get(row.user_id)??'Nome indisponível'}));
+ }
  return {
   async register(email,password,displayName){
    const {data,error}=await client.auth.signUp({email,password,options:{
@@ -72,7 +81,16 @@ export function createTriunfoAPI(client, { redirectTo='https://pauloabispo000-hu
    return this.saveProduct({...copy,name:copy.name.slice(0,110)+' (cópia)',stock:0,status:'archived'});
   },
   vote(id,favorable){return rpc('cast_vote',{p_product:id,p_favorable:favorable})},
-  suggestions(){return unwrap(table('suggestions').select('*').order('created_at',{ascending:false}))},
+  async suggestions(includeAuthors=false){
+   const rows=await unwrap(table('suggestions').select('*').order('created_at',{ascending:false}));
+   return includeAuthors?withAuthors(rows):rows;
+  },
+  async productVotes(id,offset=0){
+   if(!await rpc('is_admin'))throw Error('A lista de votantes é restrita à administração.');
+   const rows=await unwrap(table('votes').select('user_id,favorable,created_at').eq('product_id',id)
+    .order('user_id',{ascending:true}).range(offset,offset+50));
+   return {votes:await withAuthors(rows.slice(0,50)),hasMore:rows.length>50};
+  },
   suggest(name,image){return unwrap(table('suggestions').insert({name,image}).select().single())},
   // Reviewing a suggestion creates the voting product in a single transaction.
   reviewSuggestion(id,accepted){return rpc('review_suggestion',{p_suggestion:id,p_accept:accepted})},
