@@ -75,6 +75,32 @@ test('cloud mode ignores cached local administrator and renders server catalog',
   assert.ok(m.w.document.querySelector('input[type=email]'));
  }finally{m.close()}
 });
+test('refresh after the photo picker preserves the suggestion form and submits the attachment',async()=>{
+ const m=await mount();
+ try{
+  m.w.nav('suggest');
+  const form=m.w.document.querySelector('#app form');
+  const input=form.elements.photo;
+  form.elements.name.value='Mousse de teste';
+  // JSDOM does not implement the operating system's file chooser.
+  const file=new m.w.File([Uint8Array.of(137,80,78,71,13,10,26,10)],'mousse.png',{type:'image/png'});
+  Object.defineProperty(input,'files',{value:[file]});
+  m.w.dispatchEvent(new m.w.Event('focus'));
+  await new Promise(resolve=>setTimeout(resolve,330));
+  assert.equal(m.w.document.querySelector('#app form'),form);
+  assert.equal(form.elements.name.value,'Mousse de teste');
+  assert.equal(input.files[0],file);
+  // JSDOM's FormData reads an internal FileList rather than the mocked property.
+  const NativeFormData=m.w.FormData;
+  m.w.FormData=class extends NativeFormData{
+   constructor(source){super(source);if(source===form)this.set('photo',input.files[0])}
+  };
+  await m.w.suggest({preventDefault(){},target:form});
+  const saved=m.client.calls.find(c=>c.table==='triunfo_suggestions');
+  assert.equal(saved.payload.name,'Mousse de teste');
+  assert.match(saved.payload.image,/^data:image\/png;base64,/);
+ }finally{m.close()}
+});
 test('compatible amount is never rendered as bank-confirmed',async()=>{
  const m=await mount();try{
   m.w.nav('orders');

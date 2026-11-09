@@ -24,10 +24,15 @@ export async function startCloud(client) {
    account?api.cart():[],account?api.orders():[]
   ]);
   if(generation!==syncGeneration)return;
+  // Returning from the native file picker can trigger a background refresh.
+  // Replacing the suggestion form would discard the selected File.
+  const nextRole=account?.role;
+  const keepSuggestionForm=page==='suggest'&&account&&user?.id===account.id&&
+   user.role===nextRole&&document.querySelector('#app input[type="file"][name="photo"]');
   user=account?{id:account.id,username:account.display_name,role:account.role,photo:account.photo}:null;
   db={products,settings,suggestions:suggestions.map(s=>({...s,user:s.user_id})),
    cart:cart.map(i=>({id:i.product_id,qty:i.qty})),orders,users:[],votes:{}};
-  render();
+  if(!keepSuggestionForm)render();
  }
  function refresh(){
   refreshRequested=true;
